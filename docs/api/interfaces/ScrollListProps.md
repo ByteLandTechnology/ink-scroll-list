@@ -8,38 +8,38 @@ Props for the ScrollList component.
 
 ## Remarks
 
-Extends [ScrollViewProps](ScrollViewProps.md) and adds selection state management
+Extends ScrollViewProps and adds selection state management
 with automatic scroll-into-view behavior.
 
 ## Extends
 
-- [`ScrollViewProps`](ScrollViewProps.md)
+- `ScrollViewProps`
 
 ## Properties
 
 ### alignItems?
 
-> `readonly` `optional` **alignItems**: `"flex-start"` \| `"center"` \| `"flex-end"` \| `"stretch"`
+> `readonly` `optional` **alignItems**: `"center"` \| `"flex-start"` \| `"flex-end"` \| `"stretch"`
 
 The align-items property defines the default behavior for how items are laid out along the cross axis (perpendicular to the main axis).
 See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`alignItems`](ScrollViewProps.md#alignitems)
+`ScrollViewProps.alignItems`
 
 ---
 
 ### alignSelf?
 
-> `readonly` `optional` **alignSelf**: `"flex-start"` \| `"center"` \| `"flex-end"` \| `"auto"`
+> `readonly` `optional` **alignSelf**: `"auto"` \| `"center"` \| `"flex-start"` \| `"flex-end"`
 
 It makes possible to override the align-items value for specific flex items.
 See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`alignSelf`](ScrollViewProps.md#alignself)
+`ScrollViewProps.alignSelf`
 
 ---
 
@@ -51,7 +51,7 @@ Hide the element from screen readers.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`aria-hidden`](ScrollViewProps.md#aria-hidden)
+`ScrollViewProps.aria-hidden`
 
 ---
 
@@ -63,7 +63,7 @@ A label for the element for screen readers.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`aria-label`](ScrollViewProps.md#aria-label)
+`ScrollViewProps.aria-label`
 
 ---
 
@@ -75,7 +75,7 @@ The role of the element.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`aria-role`](ScrollViewProps.md#aria-role)
+`ScrollViewProps.aria-role`
 
 ---
 
@@ -123,7 +123,7 @@ The state of the element.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`aria-state`](ScrollViewProps.md#aria-state)
+`ScrollViewProps.aria-state`
 
 ---
 
@@ -137,7 +137,7 @@ Accepts the same values as `color` in the `<Text>` component.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`backgroundColor`](ScrollViewProps.md#backgroundcolor)
+`ScrollViewProps.backgroundColor`
 
 ---
 
@@ -155,7 +155,7 @@ true;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderBottom`](ScrollViewProps.md#borderbottom)
+`ScrollViewProps.borderBottom`
 
 ---
 
@@ -167,7 +167,7 @@ Change bottom border color. Accepts the same values as `color` in `Text` compone
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderBottomColor`](ScrollViewProps.md#borderbottomcolor)
+`ScrollViewProps.borderBottomColor`
 
 ---
 
@@ -185,7 +185,7 @@ false;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderBottomDimColor`](ScrollViewProps.md#borderbottomdimcolor)
+`ScrollViewProps.borderBottomDimColor`
 
 ---
 
@@ -197,7 +197,7 @@ Change border color. A shorthand for setting `borderTopColor`, `borderRightColor
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderColor`](ScrollViewProps.md#bordercolor)
+`ScrollViewProps.borderColor`
 
 ---
 
@@ -215,7 +215,7 @@ false;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderDimColor`](ScrollViewProps.md#borderdimcolor)
+`ScrollViewProps.borderDimColor`
 
 ---
 
@@ -233,7 +233,7 @@ true;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderLeft`](ScrollViewProps.md#borderleft)
+`ScrollViewProps.borderLeft`
 
 ---
 
@@ -245,7 +245,7 @@ Change left border color. Accepts the same values as `color` in `Text` component
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderLeftColor`](ScrollViewProps.md#borderleftcolor)
+`ScrollViewProps.borderLeftColor`
 
 ---
 
@@ -263,7 +263,7 @@ false;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderLeftDimColor`](ScrollViewProps.md#borderleftdimcolor)
+`ScrollViewProps.borderLeftDimColor`
 
 ---
 
@@ -281,7 +281,7 @@ true;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderRight`](ScrollViewProps.md#borderright)
+`ScrollViewProps.borderRight`
 
 ---
 
@@ -293,7 +293,7 @@ Change right border color. Accepts the same values as `color` in `Text` componen
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderRightColor`](ScrollViewProps.md#borderrightcolor)
+`ScrollViewProps.borderRightColor`
 
 ---
 
@@ -311,7 +311,7 @@ false;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderRightDimColor`](ScrollViewProps.md#borderrightdimcolor)
+`ScrollViewProps.borderRightDimColor`
 
 ---
 
@@ -323,7 +323,7 @@ Add a border with a specified style. If `borderStyle` is `undefined` (the defaul
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderStyle`](ScrollViewProps.md#borderstyle)
+`ScrollViewProps.borderStyle`
 
 ---
 
@@ -341,7 +341,7 @@ true;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderTop`](ScrollViewProps.md#bordertop)
+`ScrollViewProps.borderTop`
 
 ---
 
@@ -353,7 +353,7 @@ Change top border color. Accepts the same values as `color` in `Text` component.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderTopColor`](ScrollViewProps.md#bordertopcolor)
+`ScrollViewProps.borderTopColor`
 
 ---
 
@@ -371,7 +371,7 @@ false;
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`borderTopDimColor`](ScrollViewProps.md#bordertopdimcolor)
+`ScrollViewProps.borderTopDimColor`
 
 ---
 
@@ -388,7 +388,7 @@ prop, which will be preserved during rendering for proper reconciliation.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`children`](ScrollViewProps.md#children)
+`ScrollViewProps.children`
 
 ---
 
@@ -400,7 +400,7 @@ Size of the gap between an element's columns.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`columnGap`](ScrollViewProps.md#columngap)
+`ScrollViewProps.columnGap`
 
 ---
 
@@ -412,7 +412,7 @@ Set this property to `none` to hide the element.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`display`](ScrollViewProps.md#display)
+`ScrollViewProps.display`
 
 ---
 
@@ -425,7 +425,7 @@ See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`flexBasis`](ScrollViewProps.md#flexbasis)
+`ScrollViewProps.flexBasis`
 
 ---
 
@@ -438,7 +438,7 @@ See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`flexDirection`](ScrollViewProps.md#flexdirection)
+`ScrollViewProps.flexDirection`
 
 ---
 
@@ -451,7 +451,7 @@ See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`flexGrow`](ScrollViewProps.md#flexgrow)
+`ScrollViewProps.flexGrow`
 
 ---
 
@@ -464,7 +464,7 @@ See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`flexShrink`](ScrollViewProps.md#flexshrink)
+`ScrollViewProps.flexShrink`
 
 ---
 
@@ -477,7 +477,7 @@ See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`flexWrap`](ScrollViewProps.md#flexwrap)
+`ScrollViewProps.flexWrap`
 
 ---
 
@@ -489,7 +489,7 @@ Size of the gap between an element's columns and rows. A shorthand for `columnGa
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`gap`](ScrollViewProps.md#gap)
+`ScrollViewProps.gap`
 
 ---
 
@@ -501,20 +501,20 @@ Height of the element in lines (rows). You can also set it as a percentage, whic
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`height`](ScrollViewProps.md#height)
+`ScrollViewProps.height`
 
 ---
 
 ### justifyContent?
 
-> `readonly` `optional` **justifyContent**: `"flex-start"` \| `"center"` \| `"flex-end"` \| `"space-between"` \| `"space-around"` \| `"space-evenly"`
+> `readonly` `optional` **justifyContent**: `"center"` \| `"flex-start"` \| `"flex-end"` \| `"space-between"` \| `"space-around"` \| `"space-evenly"`
 
 It defines the alignment along the main axis.
 See [justify-content](https://css-tricks.com/almanac/properties/j/justify-content/).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`justifyContent`](ScrollViewProps.md#justifycontent)
+`ScrollViewProps.justifyContent`
 
 ---
 
@@ -526,7 +526,7 @@ Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginL
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`margin`](ScrollViewProps.md#margin)
+`ScrollViewProps.margin`
 
 ---
 
@@ -538,7 +538,7 @@ Bottom margin.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`marginBottom`](ScrollViewProps.md#marginbottom)
+`ScrollViewProps.marginBottom`
 
 ---
 
@@ -550,7 +550,7 @@ Left margin.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`marginLeft`](ScrollViewProps.md#marginleft)
+`ScrollViewProps.marginLeft`
 
 ---
 
@@ -562,7 +562,7 @@ Right margin.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`marginRight`](ScrollViewProps.md#marginright)
+`ScrollViewProps.marginRight`
 
 ---
 
@@ -574,7 +574,7 @@ Top margin.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`marginTop`](ScrollViewProps.md#margintop)
+`ScrollViewProps.marginTop`
 
 ---
 
@@ -586,7 +586,7 @@ Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`marginX`](ScrollViewProps.md#marginx)
+`ScrollViewProps.marginX`
 
 ---
 
@@ -598,7 +598,7 @@ Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`marginY`](ScrollViewProps.md#marginy)
+`ScrollViewProps.marginY`
 
 ---
 
@@ -610,7 +610,7 @@ Sets a minimum height of the element.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`minHeight`](ScrollViewProps.md#minheight)
+`ScrollViewProps.minHeight`
 
 ---
 
@@ -622,7 +622,7 @@ Sets a minimum width of the element.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`minWidth`](ScrollViewProps.md#minwidth)
+`ScrollViewProps.minWidth`
 
 ---
 
@@ -667,7 +667,7 @@ includes the calculated top position based on preceding items.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`onItemLayoutChange`](ScrollViewProps.md#onitemlayoutchange)
+`ScrollViewProps.onItemLayoutChange`
 
 ---
 
@@ -697,7 +697,7 @@ The new dimensions of the viewport.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`onLayout`](ScrollViewProps.md#onlayout)
+`ScrollViewProps.onLayout`
 
 ---
 
@@ -721,7 +721,7 @@ The new scroll offset (distance from top).
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`onScroll`](ScrollViewProps.md#onscroll)
+`ScrollViewProps.onScroll`
 
 ---
 
@@ -764,7 +764,7 @@ Behavior for an element's overflow in both directions.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`overflow`](ScrollViewProps.md#overflow)
+`ScrollViewProps.overflow`
 
 ---
 
@@ -782,7 +782,7 @@ Behavior for an element's overflow in the horizontal direction.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`overflowX`](ScrollViewProps.md#overflowx)
+`ScrollViewProps.overflowX`
 
 ---
 
@@ -800,7 +800,7 @@ Behavior for an element's overflow in the vertical direction.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`overflowY`](ScrollViewProps.md#overflowy)
+`ScrollViewProps.overflowY`
 
 ---
 
@@ -812,7 +812,7 @@ Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `padd
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`padding`](ScrollViewProps.md#padding)
+`ScrollViewProps.padding`
 
 ---
 
@@ -824,7 +824,7 @@ Bottom padding.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`paddingBottom`](ScrollViewProps.md#paddingbottom)
+`ScrollViewProps.paddingBottom`
 
 ---
 
@@ -836,7 +836,7 @@ Left padding.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`paddingLeft`](ScrollViewProps.md#paddingleft)
+`ScrollViewProps.paddingLeft`
 
 ---
 
@@ -848,7 +848,7 @@ Right padding.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`paddingRight`](ScrollViewProps.md#paddingright)
+`ScrollViewProps.paddingRight`
 
 ---
 
@@ -860,7 +860,7 @@ Top padding.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`paddingTop`](ScrollViewProps.md#paddingtop)
+`ScrollViewProps.paddingTop`
 
 ---
 
@@ -872,7 +872,7 @@ Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`paddingX`](ScrollViewProps.md#paddingx)
+`ScrollViewProps.paddingX`
 
 ---
 
@@ -884,7 +884,7 @@ Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`paddingY`](ScrollViewProps.md#paddingy)
+`ScrollViewProps.paddingY`
 
 ---
 
@@ -894,7 +894,7 @@ Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`position`](ScrollViewProps.md#position)
+`ScrollViewProps.position`
 
 ---
 
@@ -906,7 +906,7 @@ Size of the gap between an element's rows.
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`rowGap`](ScrollViewProps.md#rowgap)
+`ScrollViewProps.rowGap`
 
 ---
 
@@ -950,4 +950,4 @@ Width of the element in spaces. You can also set it as a percentage, which will 
 
 #### Inherited from
 
-[`ScrollViewProps`](ScrollViewProps.md).[`width`](ScrollViewProps.md#width)
+`ScrollViewProps.width`

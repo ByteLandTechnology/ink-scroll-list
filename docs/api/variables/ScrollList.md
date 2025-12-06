@@ -10,7 +10,7 @@ A scrollable list with built-in selection state management.
 
 ## Remarks
 
-This component extends [ScrollView](ScrollView.md) to provide:
+This component extends ScrollView to provide:
 
 - Selection state tracking
 - Automatic scroll-into-view when selection changes

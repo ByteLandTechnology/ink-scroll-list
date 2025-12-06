@@ -8,11 +8,11 @@ Ref interface for controlling the ScrollList programmatically.
 
 ## Remarks
 
-Extends [ScrollViewRef](ScrollViewRef.md) with selection management methods.
+Extends ScrollViewRef with selection management methods.
 
 ## Extends
 
-- [`ScrollViewRef`](ScrollViewRef.md)
+- `ScrollViewRef`
 
 ## Properties
 
@@ -115,7 +115,7 @@ if (layout) {
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`getItemLayout`](ScrollViewRef.md#getitemlayout)
+`ScrollViewRef.getItemLayout`
 
 ---
 
@@ -139,7 +139,7 @@ Returns 0 if the content fits within the viewport.
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`getMaxScrollOffset`](ScrollViewRef.md#getmaxscrolloffset)
+`ScrollViewRef.getMaxScrollOffset`
 
 ---
 
@@ -178,7 +178,7 @@ at the very top (no scrolling has occurred).
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`getScrollOffset`](ScrollViewRef.md#getscrolloffset)
+`ScrollViewRef.getScrollOffset`
 
 ---
 
@@ -215,7 +215,7 @@ This value depends on the container's height and terminal size.
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`getViewportHeight`](ScrollViewRef.md#getviewportheight)
+`ScrollViewRef.getViewportHeight`
 
 ---
 
@@ -263,7 +263,7 @@ useEffect(() => {
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`remeasure`](ScrollViewRef.md#remeasure)
+`ScrollViewRef.remeasure`
 
 ---
 
@@ -307,7 +307,7 @@ const handleToggleExpand = (index: number) => {
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`remeasureItem`](ScrollViewRef.md#remeasureitem)
+`ScrollViewRef.remeasureItem`
 
 ---
 
@@ -331,7 +331,7 @@ Positive for down, negative for up.
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`scrollBy`](ScrollViewRef.md#scrollby)
+`ScrollViewRef.scrollBy`
 
 ---
 
@@ -355,7 +355,7 @@ The target Y coordinate.
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`scrollTo`](ScrollViewRef.md#scrollto)
+`ScrollViewRef.scrollTo`
 
 ---
 
@@ -371,7 +371,7 @@ Scrolls to the very bottom (maxScroll).
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`scrollToBottom`](ScrollViewRef.md#scrolltobottom)
+`ScrollViewRef.scrollToBottom`
 
 ---
 
@@ -413,7 +413,7 @@ Scrolls to the very top (position 0).
 
 #### Inherited from
 
-[`ScrollViewRef`](ScrollViewRef.md).[`scrollToTop`](ScrollViewRef.md#scrolltotop)
+`ScrollViewRef.scrollToTop`
 
 ---
 

@@ -184,7 +184,7 @@ echo '{
   "entryPoints": ["./src/index.tsx"],
   "out": "docs/api",
   "plugin": ["typedoc-plugin-markdown"],
-  "name": "ink-scroll-view",
+  "name": "ink-scroll-list",
   "readme": "none",
   "hideBreadcrumbs": true,
   "githubPages": false

@@ -6,7 +6,7 @@ import React, {
   useImperativeHandle,
   useCallback,
 } from "react";
-import { ScrollView, ScrollViewRef, ScrollViewProps } from "./ScrollView";
+import { ScrollView, ScrollViewRef, ScrollViewProps } from "ink-scroll-view";
 
 /**
  * Alignment mode for scrolling to items.

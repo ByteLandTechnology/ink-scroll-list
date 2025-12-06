@@ -1,23 +1,23 @@
 {
-  "name": "ink-scroll-view",
+  "name": "ink-scroll-list",
   "version": "0.1.0",
-  "description": "A ScrollView component for Ink CLI applications",
+  "description": "A ScrollList component for Ink CLI applications",
   "keywords": [
     "react",
     "ink",
     "cli",
     "terminal",
-    "scrollview",
+    "scrolllist",
     "component",
     "ui"
   ],
-  "homepage": "https://www.byteland.app/opensource/ink-scroll-view",
+  "homepage": "https://www.byteland.app/opensource/ink-scroll-list",
   "bugs": {
-    "url": "https://github.com/ByteLandTechnology/ink-scroll-view/issues"
+    "url": "https://github.com/ByteLandTechnology/ink-scroll-list/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ByteLandTechnology/ink-scroll-view.git"
+    "url": "git+https://github.com/ByteLandTechnology/ink-scroll-list.git"
   },
   "license": "MIT",
   "author": "ByteLand Technology <github@byteland.app>",
@@ -36,7 +36,8 @@
   },
   "peerDependencies": {
     "ink": ">=6",
-    "react": ">=19"
+    "react": ">=19",
+    "ink-scroll-view": "^0.1.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
@@ -52,6 +53,7 @@
     "react": "^19.2.1",
     "tsup": "^8.5.1",
     "typedoc": "^0.28.15",
-    "typedoc-plugin-markdown": "^4.9.0"
+    "typedoc-plugin-markdown": "^4.9.0",
+    "ink-scroll-view": "^0.1.0"
   }
 }
