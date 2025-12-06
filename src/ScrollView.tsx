@@ -7,6 +7,7 @@ import React, {
   useImperativeHandle,
   useLayoutEffect,
   useCallback,
+  useMemo,
 } from "react";
 import { Box, BoxProps, measureElement, DOMElement } from "ink";
 
@@ -191,48 +192,45 @@ export interface ScrollViewRef {
    * Forces a complete re-layout of the ScrollView.
    *
    * @remarks
-   * **IMPORTANT**: This ScrollView does NOT automatically listen to terminal
-   * resize events. The parent component is responsible for calling this
-   * method when the layout needs to be recalculated.
-   *
-   * This method should be called when:
-   * 1. The terminal window is resized - parent should listen to stdout
-   *    resize events and call `forceLayout()`.
-   * 2. Child content has dynamically changed (e.g., text expanded/collapsed,
-   *    images loaded, async content populated) but the `children` array
-   *    reference itself has not changed.
-   * 3. After programmatic changes to child components that affect their
-   *    rendered height.
-   *
-   * What it does:
-   * - Clears the cached item heights, forcing all children to be re-measured.
-   * - Re-measures the viewport dimensions.
-   * - Recalculates the maximum scroll position.
-   * - Adjusts the current scroll position if it exceeds the new maximum.
+   * Triggers re-measurement of all children and viewport dimensions.
+   * Use this when the terminal is resized or when multiple items change.
    *
    * @example
    * ```tsx
-   * const scrollViewRef = useRef<ScrollViewRef>(null);
-   * const { stdout } = useStdout();
-   *
    * // Handle terminal resize
    * useEffect(() => {
    *   const handleResize = () => scrollViewRef.current?.forceLayout();
    *   stdout?.on('resize', handleResize);
    *   return () => { stdout?.off('resize', handleResize); };
    * }, [stdout]);
-   *
-   * // After expanding/collapsing an item:
-   * const handleToggleExpand = () => {
-   *   setExpanded(!expanded);
-   *   // Force re-layout after state update
-   *   requestAnimationFrame(() => {
-   *     scrollViewRef.current?.forceLayout();
-   *   });
-   * };
    * ```
    */
   forceLayout: () => void;
+
+  /**
+   * Triggers re-measurement of a specific child item.
+   *
+   * @remarks
+   * More efficient than `forceLayout()` when only a single item's content
+   * has changed (e.g., expanded/collapsed). The `itemOffsets` and
+   * `contentHeight` will be automatically recalculated.
+   *
+   * @param index - The index of the child to re-measure.
+   *
+   * @example
+   * ```tsx
+   * const handleToggleExpand = (index: number) => {
+   *   setExpandedItems(prev => {
+   *     const next = new Set(prev);
+   *     next.has(index) ? next.delete(index) : next.add(index);
+   *     return next;
+   *   });
+   *   // Re-measure only the affected item
+   *   setTimeout(() => scrollViewRef.current?.remeasureItem(index), 0);
+   * };
+   * ```
+   */
+  remeasureItem: (index: number) => void;
 }
 
 /**
@@ -250,21 +248,23 @@ const MeasurableItem = ({
   onMeasure,
   index,
   width,
+  measureKey,
 }: {
   children: React.ReactElement;
   onMeasure: (index: number, height: number) => void;
   index: number;
   width: number;
+  measureKey: number;
 }) => {
   const ref = useRef<DOMElement>(null);
 
-  // Measure on mount and when width changes
+  // Measure on mount, when width changes, or when measureKey changes
   useLayoutEffect(() => {
     if (ref.current) {
       const { height } = measureElement(ref.current);
       onMeasure(index, height);
     }
-  }, [index, onMeasure, width]);
+  }, [index, onMeasure, width, measureKey]);
 
   return (
     <Box ref={ref} flexShrink={0} width={width}>
@@ -321,7 +321,24 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
 
     // Store heights of all child items to calculate positions
     const [itemHeights, setItemHeights] = useState<Record<number, number>>({});
-    const [contentHeight, setContentHeight] = useState(0);
+
+    // Per-item measure keys for targeted re-measurement
+    const [itemMeasureKeys, setItemMeasureKeys] = useState<
+      Record<number, number>
+    >({});
+
+    // Derive itemOffsets and contentHeight from itemHeights
+    const { itemOffsets, contentHeight } = useMemo(() => {
+      const offsets: Record<number, number> = {};
+      let totalHeight = 0;
+      // Ensure children is an array for consistent iteration
+      const childrenArray = React.Children.toArray(children);
+      for (let i = 0; i < childrenArray.length; i++) {
+        offsets[i] = totalHeight;
+        totalHeight += itemHeights[i] || 0;
+      }
+      return { itemOffsets: offsets, contentHeight: totalHeight };
+    }, [itemHeights, children.length]);
 
     // Store dimensions of the viewport
     const [viewDimensions, setViewDimensions] = useState({
@@ -335,9 +352,6 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
         if (prev[index] === height) return prev;
         return { ...prev, [index]: height };
       });
-      if (index === children?.length - 1) {
-        setContentHeight((prev) => prev + height);
-      }
     }, []);
 
     // Trigger initial measurement on mount
@@ -353,26 +367,25 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
     }, [redrawIndex]);
 
     // Helper to calculate layout metrics
-    const calculateMetrics = () => {
+    const calculateMetrics = useCallback(() => {
       if (!outerRef.current || !innerRef.current) {
         return { viewportHeight: 0, contentHeight: 0, maxScroll: 0 };
       }
-      // We rely on the container's measured dimensions
       const viewportHeight = viewDimensions.height;
-
       const maxScroll = Math.max(0, contentHeight - viewportHeight);
-
       return { viewportHeight, contentHeight, maxScroll };
-    };
+    }, [viewDimensions.height, contentHeight]);
 
-    // Helper to get the top position and height of a specific item
-    const getItemPosition = (index: number) => {
-      let top = 0;
-      for (let i = 0; i < index; i++) {
-        top += itemHeights[i] || 0;
-      }
-      return { top, height: itemHeights[index] || 0 };
-    };
+    // Helper to get the top position and height of a specific item (O(1) lookup)
+    const getItemPosition = useCallback(
+      (index: number) => {
+        return {
+          top: itemOffsets[index] ?? 0,
+          height: itemHeights[index] ?? 0,
+        };
+      },
+      [itemOffsets, itemHeights],
+    );
 
     // Ensure scroll position stays within bounds when content/layout changes
     useEffect(() => {
@@ -457,11 +470,17 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
         };
       },
       forceLayout: () => {
-        // Clear all cached item heights to force re-measurement
-        setItemHeights({});
-        setContentHeight(0);
-        // Trigger a redraw to re-measure viewport and all items
+        // Trigger a redraw to re-measure viewport and all items.
+        // Note: We don't clear itemHeights here to preserve scroll position.
+        // New measurements will automatically overwrite old values.
         redraw();
+      },
+      remeasureItem: (index: number) => {
+        // Increment the measure key for a specific item to trigger re-measurement
+        setItemMeasureKeys((prev) => ({
+          ...prev,
+          [index]: (prev[index] || 0) + 1,
+        }));
       },
     }));
 
@@ -485,6 +504,7 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
                 width={viewDimensions.width}
                 index={index}
                 onMeasure={handleMeasure}
+                measureKey={redrawIndex + (itemMeasureKeys[index] || 0)}
               >
                 {child}
               </MeasurableItem>

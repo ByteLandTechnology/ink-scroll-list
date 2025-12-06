@@ -286,6 +286,8 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
       getItemLayout: (index: number) =>
         scrollViewRef.current?.getItemLayout(index) ?? null,
       forceLayout: () => scrollViewRef.current?.forceLayout(),
+      remeasureItem: (index: number) =>
+        scrollViewRef.current?.remeasureItem(index),
 
       // Selection-specific methods
       scrollToItem,

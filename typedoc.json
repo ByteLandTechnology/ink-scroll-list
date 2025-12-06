@@ -6,5 +6,6 @@
   "name": "ink-scroll-view",
   "readme": "none",
   "hideBreadcrumbs": true,
-  "githubPages": false
+  "githubPages": false,
+  "disableSources": true
 }

@@ -6,8 +6,6 @@
 
 > `const` **ScrollView**: `ForwardRefExoticComponent`\<[`ScrollViewProps`](../interfaces/ScrollViewProps.md) & `RefAttributes`\<[`ScrollViewRef`](../interfaces/ScrollViewRef.md)\>\>
 
-Defined in: src/ScrollView.tsx:314
-
 A ScrollView component for Ink applications.
 
 ## Remarks

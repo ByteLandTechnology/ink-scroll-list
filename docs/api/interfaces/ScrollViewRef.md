@@ -4,8 +4,6 @@
 
 # Interface: ScrollViewRef
 
-Defined in: src/ScrollView.tsx:40
-
 Ref interface for controlling the ScrollView programmatically.
 
 ## Extended by
@@ -18,8 +16,6 @@ Ref interface for controlling the ScrollView programmatically.
 
 > **forceLayout**: () => `void`
 
-Defined in: src/ScrollView.tsx:235
-
 Forces a complete re-layout of the ScrollView.
 
 #### Returns
@@ -28,33 +24,12 @@ Forces a complete re-layout of the ScrollView.
 
 #### Remarks
 
-**IMPORTANT**: This ScrollView does NOT automatically listen to terminal
-resize events. The parent component is responsible for calling this
-method when the layout needs to be recalculated.
-
-This method should be called when:
-
-1. The terminal window is resized - parent should listen to stdout
-   resize events and call `forceLayout()`.
-2. Child content has dynamically changed (e.g., text expanded/collapsed,
-   images loaded, async content populated) but the `children` array
-   reference itself has not changed.
-3. After programmatic changes to child components that affect their
-   rendered height.
-
-What it does:
-
-- Clears the cached item heights, forcing all children to be re-measured.
-- Re-measures the viewport dimensions.
-- Recalculates the maximum scroll position.
-- Adjusts the current scroll position if it exceeds the new maximum.
+Triggers re-measurement of all children and viewport dimensions.
+Use this when the terminal is resized or when multiple items change.
 
 #### Example
 
 ```tsx
-const scrollViewRef = useRef<ScrollViewRef>(null);
-const { stdout } = useStdout();
-
 // Handle terminal resize
 useEffect(() => {
   const handleResize = () => scrollViewRef.current?.forceLayout();
@@ -63,15 +38,6 @@ useEffect(() => {
     stdout?.off("resize", handleResize);
   };
 }, [stdout]);
-
-// After expanding/collapsing an item:
-const handleToggleExpand = () => {
-  setExpanded(!expanded);
-  // Force re-layout after state update
-  requestAnimationFrame(() => {
-    scrollViewRef.current?.forceLayout();
-  });
-};
 ```
 
 ---
@@ -79,8 +45,6 @@ const handleToggleExpand = () => {
 ### getItemLayout()
 
 > **getItemLayout**: (`index`) => \{ `bottom`: `number`; `height`: `number`; `isVisible`: `boolean`; `top`: `number`; `visibleHeight`: `number`; `visibleTop`: `number`; \} \| `null`
-
-Defined in: src/ScrollView.tsx:181
 
 Gets the layout information (position and size) of a specific item.
 
@@ -167,8 +131,6 @@ if (layout) {
 
 > **getMaxScrollOffset**: () => `number`
 
-Defined in: src/ScrollView.tsx:102
-
 Gets the maximum possible scroll offset.
 
 #### Returns
@@ -188,8 +150,6 @@ Returns 0 if the content fits within the viewport.
 ### getScrollOffset()
 
 > **getScrollOffset**: () => `number`
-
-Defined in: src/ScrollView.tsx:90
 
 Gets the current scroll offset (distance scrolled from the top).
 
@@ -226,8 +186,6 @@ at the very top (no scrolling has occurred).
 
 > **getViewportHeight**: () => `number`
 
-Defined in: src/ScrollView.tsx:113
-
 Gets the current height of the visible viewport.
 
 #### Returns
@@ -243,11 +201,49 @@ This value depends on the container's height and terminal size.
 
 ---
 
+### remeasureItem()
+
+> **remeasureItem**: (`index`) => `void`
+
+Triggers re-measurement of a specific child item.
+
+#### Parameters
+
+##### index
+
+`number`
+
+The index of the child to re-measure.
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+More efficient than `forceLayout()` when only a single item's content
+has changed (e.g., expanded/collapsed). The `itemOffsets` and
+`contentHeight` will be automatically recalculated.
+
+#### Example
+
+```tsx
+const handleToggleExpand = (index: number) => {
+  setExpandedItems((prev) => {
+    const next = new Set(prev);
+    next.has(index) ? next.delete(index) : next.add(index);
+    return next;
+  });
+  // Re-measure only the affected item
+  setTimeout(() => scrollViewRef.current?.remeasureItem(index), 0);
+};
+```
+
+---
+
 ### scrollBy()
 
 > **scrollBy**: (`delta`) => `void`
-
-Defined in: src/ScrollView.tsx:53
 
 Scrolls by a relative amount.
 
@@ -269,8 +265,6 @@ Positive for down, negative for up.
 
 > **scrollTo**: (`y`) => `void`
 
-Defined in: src/ScrollView.tsx:46
-
 Scrolls to a specific vertical position.
 
 #### Parameters
@@ -291,8 +285,6 @@ The target Y coordinate.
 
 > **scrollToBottom**: () => `void`
 
-Defined in: src/ScrollView.tsx:63
-
 Scrolls to the very bottom (maxScroll).
 
 #### Returns
@@ -304,8 +296,6 @@ Scrolls to the very bottom (maxScroll).
 ### scrollToTop()
 
 > **scrollToTop**: () => `void`
-
-Defined in: src/ScrollView.tsx:58
 
 Scrolls to the very top (position 0).
 

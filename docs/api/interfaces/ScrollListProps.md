@@ -4,8 +4,6 @@
 
 # Interface: ScrollListProps
 
-Defined in: src/ScrollList.tsx:23
-
 Props for the ScrollList component.
 
 ## Remarks
@@ -23,8 +21,6 @@ with automatic scroll-into-view behavior.
 
 > `readonly` `optional` **alignItems**: `"flex-start"` \| `"center"` \| `"flex-end"` \| `"stretch"`
 
-Defined in: node_modules/ink/build/styles.d.ts:105
-
 The align-items property defines the default behavior for how items are laid out along the cross axis (perpendicular to the main axis).
 See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 
@@ -37,8 +33,6 @@ See [align-items](https://css-tricks.com/almanac/properties/a/align-items/).
 ### alignSelf?
 
 > `readonly` `optional` **alignSelf**: `"flex-start"` \| `"center"` \| `"flex-end"` \| `"auto"`
-
-Defined in: node_modules/ink/build/styles.d.ts:110
 
 It makes possible to override the align-items value for specific flex items.
 See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
@@ -53,8 +47,6 @@ See [align-self](https://css-tricks.com/almanac/properties/a/align-self/).
 
 > `readonly` `optional` **aria-hidden**: `boolean`
 
-Defined in: node_modules/ink/build/components/Box.d.ts:13
-
 Hide the element from screen readers.
 
 #### Inherited from
@@ -66,8 +58,6 @@ Hide the element from screen readers.
 ### aria-label?
 
 > `readonly` `optional` **aria-label**: `string`
-
-Defined in: node_modules/ink/build/components/Box.d.ts:9
 
 A label for the element for screen readers.
 
@@ -81,8 +71,6 @@ A label for the element for screen readers.
 
 > `readonly` `optional` **aria-role**: `"button"` \| `"checkbox"` \| `"combobox"` \| `"list"` \| `"listbox"` \| `"listitem"` \| `"menu"` \| `"menuitem"` \| `"option"` \| `"progressbar"` \| `"radio"` \| `"radiogroup"` \| `"tab"` \| `"tablist"` \| `"table"` \| `"textbox"` \| `"timer"` \| `"toolbar"`
 
-Defined in: node_modules/ink/build/components/Box.d.ts:17
-
 The role of the element.
 
 #### Inherited from
@@ -94,8 +82,6 @@ The role of the element.
 ### aria-state?
 
 > `readonly` `optional` **aria-state**: `object`
-
-Defined in: node_modules/ink/build/components/Box.d.ts:21
 
 The state of the element.
 
@@ -145,8 +131,6 @@ The state of the element.
 
 > `readonly` `optional` **backgroundColor**: `LiteralUnion`\<keyof ForegroundColor, `string`\>
 
-Defined in: node_modules/ink/build/styles.d.ts:237
-
 Background color for the element.
 
 Accepts the same values as `color` in the `<Text>` component.
@@ -160,8 +144,6 @@ Accepts the same values as `color` in the `<Text>` component.
 ### borderBottom?
 
 > `readonly` `optional` **borderBottom**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:151
 
 Determines whether bottom border is visible.
 
@@ -181,8 +163,6 @@ true;
 
 > `readonly` `optional` **borderBottomColor**: `LiteralUnion`\<keyof ForegroundColor, `string`\>
 
-Defined in: node_modules/ink/build/styles.d.ts:175
-
 Change bottom border color. Accepts the same values as `color` in `Text` component.
 
 #### Inherited from
@@ -194,8 +174,6 @@ Change bottom border color. Accepts the same values as `color` in `Text` compone
 ### borderBottomDimColor?
 
 > `readonly` `optional` **borderBottomDimColor**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:201
 
 Dim the bottom border color.
 
@@ -215,8 +193,6 @@ false;
 
 > `readonly` `optional` **borderColor**: `LiteralUnion`\<keyof ForegroundColor, `string`\>
 
-Defined in: node_modules/ink/build/styles.d.ts:167
-
 Change border color. A shorthand for setting `borderTopColor`, `borderRightColor`, `borderBottomColor`, and `borderLeftColor`.
 
 #### Inherited from
@@ -228,8 +204,6 @@ Change border color. A shorthand for setting `borderTopColor`, `borderRightColor
 ### borderDimColor?
 
 > `readonly` `optional` **borderDimColor**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:189
 
 Dim the border color. A shorthand for setting `borderTopDimColor`, `borderBottomDimColor`, `borderLeftDimColor`, and `borderRightDimColor`.
 
@@ -249,8 +223,6 @@ false;
 
 > `readonly` `optional` **borderLeft**: `boolean`
 
-Defined in: node_modules/ink/build/styles.d.ts:157
-
 Determines whether left border is visible.
 
 #### Default
@@ -269,8 +241,6 @@ true;
 
 > `readonly` `optional` **borderLeftColor**: `LiteralUnion`\<keyof ForegroundColor, `string`\>
 
-Defined in: node_modules/ink/build/styles.d.ts:179
-
 Change left border color. Accepts the same values as `color` in `Text` component.
 
 #### Inherited from
@@ -282,8 +252,6 @@ Change left border color. Accepts the same values as `color` in `Text` component
 ### borderLeftDimColor?
 
 > `readonly` `optional` **borderLeftDimColor**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:207
 
 Dim the left border color.
 
@@ -303,8 +271,6 @@ false;
 
 > `readonly` `optional` **borderRight**: `boolean`
 
-Defined in: node_modules/ink/build/styles.d.ts:163
-
 Determines whether right border is visible.
 
 #### Default
@@ -323,8 +289,6 @@ true;
 
 > `readonly` `optional` **borderRightColor**: `LiteralUnion`\<keyof ForegroundColor, `string`\>
 
-Defined in: node_modules/ink/build/styles.d.ts:183
-
 Change right border color. Accepts the same values as `color` in `Text` component.
 
 #### Inherited from
@@ -336,8 +300,6 @@ Change right border color. Accepts the same values as `color` in `Text` componen
 ### borderRightDimColor?
 
 > `readonly` `optional` **borderRightDimColor**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:213
 
 Dim the right border color.
 
@@ -357,8 +319,6 @@ false;
 
 > `readonly` `optional` **borderStyle**: keyof Boxes \| `BoxStyle`
 
-Defined in: node_modules/ink/build/styles.d.ts:139
-
 Add a border with a specified style. If `borderStyle` is `undefined` (the default), no border will be added.
 
 #### Inherited from
@@ -370,8 +330,6 @@ Add a border with a specified style. If `borderStyle` is `undefined` (the defaul
 ### borderTop?
 
 > `readonly` `optional` **borderTop**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:145
 
 Determines whether top border is visible.
 
@@ -391,8 +349,6 @@ true;
 
 > `readonly` `optional` **borderTopColor**: `LiteralUnion`\<keyof ForegroundColor, `string`\>
 
-Defined in: node_modules/ink/build/styles.d.ts:171
-
 Change top border color. Accepts the same values as `color` in `Text` component.
 
 #### Inherited from
@@ -404,8 +360,6 @@ Change top border color. Accepts the same values as `color` in `Text` component.
 ### borderTopDimColor?
 
 > `readonly` `optional` **borderTopDimColor**: `boolean`
-
-Defined in: node_modules/ink/build/styles.d.ts:195
 
 Dim the top border color.
 
@@ -425,8 +379,6 @@ false;
 
 > **children**: `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>[]
 
-Defined in: src/ScrollView.tsx:34
-
 The content to be scrolled.
 
 #### Remarks
@@ -444,8 +396,6 @@ prop, which will be preserved during rendering for proper reconciliation.
 
 > `readonly` `optional` **columnGap**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:11
-
 Size of the gap between an element's columns.
 
 #### Inherited from
@@ -458,8 +408,6 @@ Size of the gap between an element's columns.
 
 > `readonly` `optional` **display**: `"flex"` \| `"none"`
 
-Defined in: node_modules/ink/build/styles.d.ts:135
-
 Set this property to `none` to hide the element.
 
 #### Inherited from
@@ -471,8 +419,6 @@ Set this property to `none` to hide the element.
 ### flexBasis?
 
 > `readonly` `optional` **flexBasis**: `string` \| `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:95
 
 It specifies the initial size of the flex item, before any available space is distributed according to the flex factors.
 See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
@@ -487,8 +433,6 @@ See [flex-basis](https://css-tricks.com/almanac/properties/f/flex-basis/).
 
 > `readonly` `optional` **flexDirection**: `"row"` \| `"column"` \| `"row-reverse"` \| `"column-reverse"`
 
-Defined in: node_modules/ink/build/styles.d.ts:90
-
 It establishes the main-axis, thus defining the direction flex items are placed in the flex container.
 See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/).
 
@@ -501,8 +445,6 @@ See [flex-direction](https://css-tricks.com/almanac/properties/f/flex-direction/
 ### flexGrow?
 
 > `readonly` `optional` **flexGrow**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:80
 
 This property defines the ability for a flex item to grow if necessary.
 See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
@@ -517,8 +459,6 @@ See [flex-grow](https://css-tricks.com/almanac/properties/f/flex-grow/).
 
 > `readonly` `optional` **flexShrink**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:85
-
 It specifies the “flex shrink factor”, which determines how much the flex item will shrink relative to the rest of the flex items in the flex container when there isn’t enough space on the row.
 See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 
@@ -531,8 +471,6 @@ See [flex-shrink](https://css-tricks.com/almanac/properties/f/flex-shrink/).
 ### flexWrap?
 
 > `readonly` `optional` **flexWrap**: `"nowrap"` \| `"wrap"` \| `"wrap-reverse"`
-
-Defined in: node_modules/ink/build/styles.d.ts:100
 
 It defines whether the flex items are forced in a single line or can be flowed into multiple lines. If set to multiple lines, it also defines the cross-axis which determines the direction new lines are stacked in.
 See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
@@ -547,8 +485,6 @@ See [flex-wrap](https://css-tricks.com/almanac/properties/f/flex-wrap/).
 
 > `readonly` `optional` **gap**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:19
-
 Size of the gap between an element's columns and rows. A shorthand for `columnGap` and `rowGap`.
 
 #### Inherited from
@@ -561,8 +497,6 @@ Size of the gap between an element's columns and rows. A shorthand for `columnGa
 
 > `readonly` `optional` **height**: `string` \| `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:123
-
 Height of the element in lines (rows). You can also set it as a percentage, which will calculate the height based on the height of the parent element.
 
 #### Inherited from
@@ -574,8 +508,6 @@ Height of the element in lines (rows). You can also set it as a percentage, whic
 ### justifyContent?
 
 > `readonly` `optional` **justifyContent**: `"flex-start"` \| `"center"` \| `"flex-end"` \| `"space-between"` \| `"space-around"` \| `"space-evenly"`
-
-Defined in: node_modules/ink/build/styles.d.ts:115
 
 It defines the alignment along the main axis.
 See [justify-content](https://css-tricks.com/almanac/properties/j/justify-content/).
@@ -590,8 +522,6 @@ See [justify-content](https://css-tricks.com/almanac/properties/j/justify-conten
 
 > `readonly` `optional` **margin**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:23
-
 Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginLeft`, and `marginRight`.
 
 #### Inherited from
@@ -603,8 +533,6 @@ Margin on all sides. Equivalent to setting `marginTop`, `marginBottom`, `marginL
 ### marginBottom?
 
 > `readonly` `optional` **marginBottom**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:39
 
 Bottom margin.
 
@@ -618,8 +546,6 @@ Bottom margin.
 
 > `readonly` `optional` **marginLeft**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:43
-
 Left margin.
 
 #### Inherited from
@@ -631,8 +557,6 @@ Left margin.
 ### marginRight?
 
 > `readonly` `optional` **marginRight**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:47
 
 Right margin.
 
@@ -646,8 +570,6 @@ Right margin.
 
 > `readonly` `optional` **marginTop**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:35
-
 Top margin.
 
 #### Inherited from
@@ -659,8 +581,6 @@ Top margin.
 ### marginX?
 
 > `readonly` `optional` **marginX**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:27
 
 Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
 
@@ -674,8 +594,6 @@ Horizontal margin. Equivalent to setting `marginLeft` and `marginRight`.
 
 > `readonly` `optional` **marginY**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:31
-
 Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
 
 #### Inherited from
@@ -687,8 +605,6 @@ Vertical margin. Equivalent to setting `marginTop` and `marginBottom`.
 ### minHeight?
 
 > `readonly` `optional` **minHeight**: `string` \| `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:131
 
 Sets a minimum height of the element.
 
@@ -702,8 +618,6 @@ Sets a minimum height of the element.
 
 > `readonly` `optional` **minWidth**: `string` \| `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:127
-
 Sets a minimum width of the element.
 
 #### Inherited from
@@ -715,8 +629,6 @@ Sets a minimum width of the element.
 ### onScroll()?
 
 > `optional` **onScroll**: (`scrollOffset`) => `void`
-
-Defined in: src/ScrollView.tsx:25
 
 Callback fired when the scroll position changes.
 
@@ -741,8 +653,6 @@ The new scroll offset (distance from top).
 ### onSelectionChange()?
 
 > `optional` **onSelectionChange**: (`index`) => `void`
-
-Defined in: src/ScrollList.tsx:55
 
 Callback fired when the selected index changes internally.
 
@@ -769,8 +679,6 @@ like `selectNext()` or `selectPrevious()`.
 
 > `readonly` `optional` **overflow**: `"visible"` \| `"hidden"`
 
-Defined in: node_modules/ink/build/styles.d.ts:219
-
 Behavior for an element's overflow in both directions.
 
 #### Default
@@ -788,8 +696,6 @@ Behavior for an element's overflow in both directions.
 ### overflowX?
 
 > `readonly` `optional` **overflowX**: `"visible"` \| `"hidden"`
-
-Defined in: node_modules/ink/build/styles.d.ts:225
 
 Behavior for an element's overflow in the horizontal direction.
 
@@ -809,8 +715,6 @@ Behavior for an element's overflow in the horizontal direction.
 
 > `readonly` `optional` **overflowY**: `"visible"` \| `"hidden"`
 
-Defined in: node_modules/ink/build/styles.d.ts:231
-
 Behavior for an element's overflow in the vertical direction.
 
 #### Default
@@ -829,8 +733,6 @@ Behavior for an element's overflow in the vertical direction.
 
 > `readonly` `optional` **padding**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:51
-
 Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `paddingLeft`, and `paddingRight`.
 
 #### Inherited from
@@ -842,8 +744,6 @@ Padding on all sides. Equivalent to setting `paddingTop`, `paddingBottom`, `padd
 ### paddingBottom?
 
 > `readonly` `optional` **paddingBottom**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:67
 
 Bottom padding.
 
@@ -857,8 +757,6 @@ Bottom padding.
 
 > `readonly` `optional` **paddingLeft**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:71
-
 Left padding.
 
 #### Inherited from
@@ -870,8 +768,6 @@ Left padding.
 ### paddingRight?
 
 > `readonly` `optional` **paddingRight**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:75
 
 Right padding.
 
@@ -885,8 +781,6 @@ Right padding.
 
 > `readonly` `optional` **paddingTop**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:63
-
 Top padding.
 
 #### Inherited from
@@ -898,8 +792,6 @@ Top padding.
 ### paddingX?
 
 > `readonly` `optional` **paddingX**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:55
 
 Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
 
@@ -913,8 +805,6 @@ Horizontal padding. Equivalent to setting `paddingLeft` and `paddingRight`.
 
 > `readonly` `optional` **paddingY**: `number`
 
-Defined in: node_modules/ink/build/styles.d.ts:59
-
 Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
 
 #### Inherited from
@@ -927,8 +817,6 @@ Vertical padding. Equivalent to setting `paddingTop` and `paddingBottom`.
 
 > `readonly` `optional` **position**: `"absolute"` \| `"relative"`
 
-Defined in: node_modules/ink/build/styles.d.ts:7
-
 #### Inherited from
 
 [`ScrollViewProps`](ScrollViewProps.md).[`position`](ScrollViewProps.md#position)
@@ -938,8 +826,6 @@ Defined in: node_modules/ink/build/styles.d.ts:7
 ### rowGap?
 
 > `readonly` `optional` **rowGap**: `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:15
 
 Size of the gap between an element's rows.
 
@@ -952,8 +838,6 @@ Size of the gap between an element's rows.
 ### scrollAlignment?
 
 > `optional` **scrollAlignment**: [`ScrollAlignment`](../type-aliases/ScrollAlignment.md)
-
-Defined in: src/ScrollList.tsx:44
 
 Alignment mode when scrolling to the selected item.
 
@@ -974,8 +858,6 @@ Alignment mode when scrolling to the selected item.
 
 > `optional` **selectedIndex**: `number`
 
-Defined in: src/ScrollList.tsx:31
-
 The currently selected item index.
 
 #### Remarks
@@ -988,8 +870,6 @@ the selected item is visible in the viewport.
 ### width?
 
 > `readonly` `optional` **width**: `string` \| `number`
-
-Defined in: node_modules/ink/build/styles.d.ts:119
 
 Width of the element in spaces. You can also set it as a percentage, which will calculate the width based on the width of the parent element.
 

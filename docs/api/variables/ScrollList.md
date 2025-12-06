@@ -6,8 +6,6 @@
 
 > `const` **ScrollList**: `ForwardRefExoticComponent`\<[`ScrollListProps`](../interfaces/ScrollListProps.md) & `RefAttributes`\<[`ScrollListRef`](../interfaces/ScrollListRef.md)\>\>
 
-Defined in: src/ScrollList.tsx:183
-
 A scrollable list with built-in selection state management.
 
 ## Remarks

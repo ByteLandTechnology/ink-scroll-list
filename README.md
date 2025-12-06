@@ -25,23 +25,29 @@ npm install ink react
 
 ### ScrollView
 
-The `ScrollView` is a low-level container. You are responsible for handling input (e.g., using `useInput` from Ink) and calling the exposed `scrollTo` or `scrollBy` methods.
+The `ScrollView` is a low-level container. You are responsible for handling input (e.g., using `useInput` from Ink) and calling the exposed ref methods.
 
 ```tsx
-import React, { useRef } from "react";
-import { render, Text, useInput } from "ink";
+import React, { useRef, useEffect } from "react";
+import { render, Text, useInput, useStdout } from "ink";
 import { ScrollView, ScrollViewRef } from "ink-scroll-view";
 
 const App = () => {
   const scrollRef = useRef<ScrollViewRef>(null);
+  const { stdout } = useStdout();
+
+  // Handle terminal resize
+  useEffect(() => {
+    const handleResize = () => scrollRef.current?.forceLayout();
+    stdout?.on("resize", handleResize);
+    return () => {
+      stdout?.off("resize", handleResize);
+    };
+  }, [stdout]);
 
   useInput((input, key) => {
-    if (key.upArrow) {
-      scrollRef.current?.scrollBy(-1);
-    }
-    if (key.downArrow) {
-      scrollRef.current?.scrollBy(1);
-    }
+    if (key.upArrow) scrollRef.current?.scrollBy(-1);
+    if (key.downArrow) scrollRef.current?.scrollBy(1);
   });
 
   return (
@@ -71,16 +77,8 @@ const App = () => {
   const items = ["First", "Second", "Third", "Fourth", "Fifth", "Sixth"];
 
   useInput((input, key) => {
-    if (key.upArrow) {
-      // selectPrevious returns the new index
-      const newIndex = listRef.current?.selectPrevious() ?? 0;
-      setSelectedIndex(newIndex);
-    }
-    if (key.downArrow) {
-      // selectNext returns the new index
-      const newIndex = listRef.current?.selectNext() ?? 0;
-      setSelectedIndex(newIndex);
-    }
+    if (key.upArrow) listRef.current?.selectPrevious();
+    if (key.downArrow) listRef.current?.selectNext();
   });
 
   return (
@@ -105,9 +103,42 @@ const App = () => {
 render(<App />);
 ```
 
+## Key Methods
+
+### ScrollViewRef
+
+| Method                 | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `scrollTo(y)`          | Scroll to a specific vertical position                     |
+| `scrollBy(delta)`      | Scroll by a relative amount                                |
+| `scrollToTop()`        | Scroll to the top                                          |
+| `scrollToBottom()`     | Scroll to the bottom                                       |
+| `getScrollOffset()`    | Get current scroll offset                                  |
+| `getMaxScrollOffset()` | Get maximum scroll offset                                  |
+| `getViewportHeight()`  | Get viewport height                                        |
+| `getItemLayout(index)` | Get layout info for a specific item                        |
+| `forceLayout()`        | Force re-measurement of all items                          |
+| `remeasureItem(index)` | Re-measure a specific item (efficient for expand/collapse) |
+
+### ScrollListRef
+
+Extends `ScrollViewRef` with:
+
+| Method                       | Description                       |
+| ---------------------------- | --------------------------------- |
+| `scrollToItem(index, mode?)` | Scroll to a specific item         |
+| `select(index, mode?)`       | Select an item and scroll to it   |
+| `selectNext()`               | Select the next item              |
+| `selectPrevious()`           | Select the previous item          |
+| `selectFirst()`              | Select the first item             |
+| `selectLast()`               | Select the last item              |
+| `getSelectedIndex()`         | Get current selected index        |
+| `isSelectedVisible()`        | Check if selected item is visible |
+| `getItemCount()`             | Get total number of items         |
+
 ## API Documentation
 
-See the [API Reference](docs/api/modules.md) for full details on props, methods, and interfaces.
+See the [API Reference](docs/api/README.md) for full details on props, methods, and interfaces.
 
 ## License
 
