@@ -69,8 +69,8 @@ echo "npx lint-staged" > .husky/pre-commit
 Configure TypeScript for a React-based Ink project, utilizing a shared configuration and defining module entry points.
 
 ```bash
-# Install TypeScript, type definitions, and the shared tsconfig base
-npm install -D typescript @types/node @types/react @sindresorhus/tsconfig
+# Install tsup, type definitions, and the shared tsconfig base
+npm install -D tsup @types/node @types/react @sindresorhus/tsconfig
 ```
 
 ### tsconfig.json
@@ -140,7 +140,7 @@ Configure `package.json` to define the main entry points and build script for th
 #   "dist"
 # ],
 # "scripts": {
-#   "build": "tsc",
+#   "build": "tsup",
 #   # ... other scripts
 # },
 # ...
