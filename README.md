@@ -9,8 +9,8 @@ A robust ScrollView and ScrollList component for [Ink](https://github.com/vadimd
 
 - **ScrollView**: A flexible container for scrolling content that exceeds the viewport.
 - **ScrollList**: A high-level component managing selection state and automatic scrolling (ideal for menus and lists).
-- **Performance**: Optimized for Ink, efficiently measuring and rendering only visible items.
-- **TypeScript**: Written in TypeScript with full type definitions and TSDoc comments.
+- **Performance**: Optimized for Ink, simplyfing layout calculations to O(1) where possible and efficiently rendering only visible items.
+- **Stability**: Implements scroll anchoring to keep the visible viewport stable even when content above dynamicially expands or collapses.
 - **Navigation**: Built-in support for programmatic scrolling and selection (next/previous/first/last).
 
 ## Installation

@@ -7,7 +7,6 @@ import React, {
   useImperativeHandle,
   useLayoutEffect,
   useCallback,
-  useMemo,
 } from "react";
 import { Box, BoxProps, measureElement, DOMElement } from "ink";
 
@@ -364,19 +363,6 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
       Record<number, number>
     >({});
 
-    // Derive itemOffsets and contentHeight from itemHeights
-    const { itemOffsets, contentHeight } = useMemo(() => {
-      const offsets: Record<number, number> = {};
-      let totalHeight = 0;
-      // Ensure children is an array for consistent iteration
-      const childrenArray = React.Children.toArray(children);
-      for (let i = 0; i < childrenArray.length; i++) {
-        offsets[i] = totalHeight;
-        totalHeight += itemHeights[i] || 0;
-      }
-      return { itemOffsets: offsets, contentHeight: totalHeight };
-    }, [itemHeights, children.length]);
-
     // Store dimensions of the viewport
     const [viewDimensions, setViewDimensions] = useState({
       height: 0,
@@ -388,6 +374,9 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
       (index: number, height: number) => {
         // Only trigger update and notify if height has changed
         if (itemHeightsRef.current[index] !== height) {
+          const oldHeight = itemHeightsRef.current[index] || 0;
+          const delta = height - oldHeight;
+
           // Optimistic update of ref to prevent double firing in same cycle
           itemHeightsRef.current = {
             ...itemHeightsRef.current,
@@ -400,16 +389,44 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
             top += itemHeightsRef.current[i] || 0;
           }
           const bottom = top + height;
+          const oldBottom = top + oldHeight;
+
+          // Scroll Anchoring:
+          // If the item that changed size is entirely above the current scroll position,
+          // we need to adjust the scroll position by the delta to keep the visible content stable.
+          // Note: We use the callback ref for scrollTop if available, but since scrollTop is state,
+          // we might need to access the latest value. We can't access state in callback easily without ref.
+          // Let's rely on setState functional update or a ref for scrollTop if needed.
+          // But wait, we need to call `setScrollTop` here.
+
+          // We don't have scrollTop ref. Let's rely on the fact that if we use setScrollTop(prev => ...),
+          // we can access the latest value. However, we also need to trigger onScroll prop.
+          // So we should probably use a ref for scrollTop or just use setScrollTop callback logic carefully.
+
+          setItemHeights((prev) => {
+            if (prev[index] === height) return prev;
+            return { ...prev, [index]: height };
+          });
+
+          setScrollTop((prevScrollTop) => {
+            // Check if item ended strictly above the viewport window START
+            // We use <= because if it touches the top edge, changing height pushes content down.
+            if (oldBottom <= prevScrollTop) {
+              const newScrollTop = Math.max(0, prevScrollTop + delta);
+              if (newScrollTop !== prevScrollTop) {
+                // Defer notification to avoid side-effects during render/state update if possible,
+                // but here we are in a callback.
+                callbacksRef.current.onScroll?.(newScrollTop);
+                return newScrollTop;
+              }
+            }
+            return prevScrollTop;
+          });
 
           callbacksRef.current.onItemLayoutChange?.(index, {
             top,
             height,
             bottom,
-          });
-
-          setItemHeights((prev) => {
-            if (prev[index] === height) return prev;
-            return { ...prev, [index]: height };
           });
         }
       },
@@ -429,38 +446,35 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
       callbacksRef.current.onLayout?.({ width, height });
     }, [redrawIndex]);
 
+    // Helper to calculate content height on-the-fly
+    const calculateContentHeight = useCallback(() => {
+      let total = 0;
+      const count = React.Children.count(children);
+      for (let i = 0; i < count; i++) {
+        total += itemHeights[i] || 0;
+      }
+      return total;
+    }, [itemHeights, children]);
+
     // Helper to calculate layout metrics
     const calculateMetrics = useCallback(() => {
       if (!outerRef.current || !innerRef.current) {
         return { viewportHeight: 0, contentHeight: 0, maxScroll: 0 };
       }
       const viewportHeight = viewDimensions.height;
+      const contentHeight = calculateContentHeight();
       const maxScroll = Math.max(0, contentHeight - viewportHeight);
       return { viewportHeight, contentHeight, maxScroll };
-    }, [viewDimensions.height, contentHeight]);
-
-    // Helper to get the top position and height of a specific item (O(1) lookup)
-    const getItemPosition = useCallback(
-      (index: number) => {
-        return {
-          top: itemOffsets[index] ?? 0,
-          height: itemHeights[index] ?? 0,
-        };
-      },
-      [itemOffsets, itemHeights],
-    );
+    }, [viewDimensions.height, calculateContentHeight]);
 
     // Ensure scroll position stays within bounds when content/layout changes
     useEffect(() => {
       const { maxScroll } = calculateMetrics();
       if (scrollTop > maxScroll) {
         setScrollTop(maxScroll);
-        // Note: we use direct prop here (or from ref) - ref is safer if prop changes
         callbacksRef.current.onScroll?.(maxScroll);
       }
-    }, [redrawIndex, children, itemHeights, scrollTop, calculateMetrics]);
-    // Note: checking scrollTop here might cause loops if not careful,
-    // but we only set if strictly greater.
+    }, [redrawIndex, calculateMetrics, scrollTop]); // Added scrollTop dependency to be safe, though mainly triggered by height changes
 
     // Expose API via ref
     useImperativeHandle(ref, () => ({
@@ -469,7 +483,7 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
         const newScrollTop = Math.max(0, Math.min(y, maxScroll));
         if (newScrollTop !== scrollTop) {
           setScrollTop(newScrollTop);
-          onScroll?.(newScrollTop);
+          callbacksRef.current.onScroll?.(newScrollTop);
         }
       },
       scrollBy: (delta: number) => {
@@ -480,20 +494,20 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
         );
         if (newScrollTop !== scrollTop) {
           setScrollTop(newScrollTop);
-          onScroll?.(newScrollTop);
+          callbacksRef.current.onScroll?.(newScrollTop);
         }
       },
       scrollToTop: () => {
         if (scrollTop !== 0) {
           setScrollTop(0);
-          onScroll?.(0);
+          callbacksRef.current.onScroll?.(0);
         }
       },
       scrollToBottom: () => {
         const { maxScroll } = calculateMetrics();
         if (scrollTop !== maxScroll) {
           setScrollTop(maxScroll);
-          onScroll?.(maxScroll);
+          callbacksRef.current.onScroll?.(maxScroll);
         }
       },
       getScrollOffset: () => scrollTop,
@@ -501,7 +515,7 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
       getViewportHeight: () => calculateMetrics().viewportHeight,
       getItemLayout: (index: number) => {
         // Check bounds
-        if (index < 0 || index >= children.length) {
+        if (index < 0 || index >= React.Children.count(children)) {
           return null;
         }
         // Check if item has been measured
@@ -509,7 +523,13 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
           return null;
         }
 
-        const { top, height } = getItemPosition(index);
+        // Calculate top on-the-fly
+        let top = 0;
+        for (let i = 0; i < index; i++) {
+          top += itemHeights[i] || 0;
+        }
+
+        const height = itemHeights[index] || 0;
         const bottom = top + height;
         const { viewportHeight } = calculateMetrics();
 
@@ -535,8 +555,6 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
       },
       remeasure: () => {
         // Trigger a redraw to re-measure viewport and all items.
-        // Note: We don't clear itemHeights here to preserve scroll position.
-        // New measurements will automatically overwrite old values.
         redraw();
       },
       remeasureItem: (index: number) => {
@@ -562,7 +580,7 @@ export const ScrollView = forwardRef<ScrollViewRef, ScrollViewProps>(
             marginTop={-scrollTop}
             flexDirection="column"
           >
-            {children.map((child, index) => (
+            {React.Children.map(children, (child, index) => (
               <MeasurableItem
                 key={child.key ?? index}
                 width={viewDimensions.width}

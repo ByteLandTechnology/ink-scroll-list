@@ -202,13 +202,36 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
     const selectedIndex = controlledSelectedIndex ?? internalSelectedIndex;
     const itemCount = React.Children.count(children);
 
+    // Cache the top position of the selected item to avoid full re-measurement
+    // This allows us to keep the selected item in view even if items above it change height
+    const [selectedItemOffset, setSelectedItemOffset] = useState<number | null>(
+      null,
+    );
+
     // Scroll to item helper
     const scrollToItem = useCallback(
       (index: number, mode: ScrollAlignment = scrollAlignment) => {
-        const layout = scrollViewRef.current?.getItemLayout(index);
-        if (!layout) return;
+        let itemTop: number | undefined;
+        let itemHeight: number | undefined;
 
-        const { top: itemTop, height: itemHeight } = layout;
+        // Try to use cached offset if available and matching
+        if (index === selectedIndex && selectedItemOffset !== null) {
+          itemTop = selectedItemOffset;
+          // We still need height for bottom/center alignment.
+          // For now, let's fetch layout.
+          // Optimization: If we trust our offset, maybe we only need height.
+          const layout = scrollViewRef.current?.getItemLayout(index);
+          if (layout) itemHeight = layout.height;
+        } else {
+          const layout = scrollViewRef.current?.getItemLayout(index);
+          if (layout) {
+            itemTop = layout.top;
+            itemHeight = layout.height;
+          }
+        }
+
+        if (itemTop === undefined || itemHeight === undefined) return;
+
         const viewportHeight = scrollViewRef.current?.getViewportHeight() ?? 0;
         const currentScrollOffset =
           scrollViewRef.current?.getScrollOffset() ?? 0;
@@ -241,7 +264,7 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
           scrollViewRef.current?.scrollTo(clampedScrollOffset);
         }
       },
-      [scrollAlignment],
+      [scrollAlignment, selectedIndex, selectedItemOffset],
     );
 
     // Update selection and notify
@@ -252,6 +275,12 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
           setInternalSelectedIndex(clampedIndex);
         }
         onSelectionChange?.(clampedIndex);
+
+        // Invalidate offset temporarily until layout catches up or measure
+        // But better: Use layout if available now to set offset immediately?
+        // Actually, we don't know the new offset until it's measured if it wasn't before.
+        // For now, clear it, let effect/layout callback set it.
+        setSelectedItemOffset(null);
 
         // Scroll to item after a tick to ensure layout is measured
         setImmediate(() => {
@@ -266,7 +295,12 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
     // Auto-scroll when selectedIndex changes
     useEffect(() => {
       if (selectedIndex >= 0 && selectedIndex < itemCount) {
-        // Use setImmediate to ensure layout is ready
+        // Update our cached offset if possible
+        const layout = scrollViewRef.current?.getItemLayout(selectedIndex);
+        if (layout) {
+          setSelectedItemOffset(layout.top);
+        }
+
         setImmediate(() => {
           scrollToItem(selectedIndex);
         });
@@ -292,6 +326,33 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         layout: { top: number; height: number; bottom: number },
       ) => {
         onItemLayoutChange?.(index, layout);
+
+        // Update cached offset if relevant
+        if (index === selectedIndex) {
+          setSelectedItemOffset(layout.top);
+        } else if (index < selectedIndex && selectedItemOffset !== null) {
+          // If an item above changed, our offset shifts by the difference
+          // But wait, the `layout.top` of the changing item doesn't tell us the delta directly here easily
+          // unless we tracked old height.
+          // However, ScrollView is already anchoring `scrollTop`.
+          // If ScrollView anchors, `itemTop` (absolute) increases, `scrollTop` increases.
+          // `itemTop - scrollTop` (relative pos) stays same.
+          // If we want to maintain the VALIDITY of `selectedItemOffset` (which is absolute),
+          // we must strictly update it.
+          // The `layout` param passed here is the NEW layout: { top, height, bottom }.
+          // But `onItemLayoutChange` in ScrollView calculates `top` by summing.
+          // So `layout.top` is correct for `index`.
+          // But what about `selectedIndex`? We don't get its new top here.
+          // Use `ScrollView`'s re-measure or just set offset to null to force fresh lookup?
+          // Setting to null is safer but loses the "optimization" of not re-measuring.
+          // Refetching:
+          const selectedLayout =
+            scrollViewRef.current?.getItemLayout(selectedIndex);
+          if (selectedLayout) {
+            setSelectedItemOffset(selectedLayout.top);
+          }
+        }
+
         // If changed item is same or above selected, the selected item's position
         // effectively changes relative to viewport or needs re-check.
         if (index <= selectedIndex) {
@@ -300,7 +361,7 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
           });
         }
       },
-      [onItemLayoutChange, selectedIndex, scrollToItem],
+      [onItemLayoutChange, selectedIndex, scrollToItem, selectedItemOffset],
     );
 
     // Expose API via ref
