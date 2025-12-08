@@ -25,32 +25,39 @@ This component extends ScrollView to provide:
 ## Example
 
 ```tsx
-const listRef = useRef<ScrollListRef>(null);
-const [selectedIndex, setSelectedIndex] = useState(0);
+import React, { useRef, useState } from "react";
+import { Box, Text, useInput } from "ink";
+import { ScrollList, ScrollListRef } from "ink-scroll-list";
 
-useInput((input, key) => {
-  if (key.downArrow) {
-    const newIndex = listRef.current?.selectNext() ?? 0;
-    setSelectedIndex(newIndex);
-  }
-  if (key.upArrow) {
-    const newIndex = listRef.current?.selectPrevious() ?? 0;
-    setSelectedIndex(newIndex);
-  }
-});
+const Demo = () => {
+  const listRef = useRef<ScrollListRef>(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const items = ["Item 1", "Item 2", "Item 3"];
 
-return (
-  <ScrollList
-    ref={listRef}
-    selectedIndex={selectedIndex}
-    scrollAlignment="auto"
-    height={10}
-  >
-    {items.map((item, i) => (
-      <Box key={i} borderStyle={i === selectedIndex ? "double" : "single"}>
-        <Text>{item}</Text>
-      </Box>
-    ))}
-  </ScrollList>
-);
+  useInput((input, key) => {
+    if (key.downArrow) {
+      // Use internal logic to select next
+      listRef.current?.selectNext();
+    }
+    if (key.upArrow) {
+      // Use internal logic to select previous
+      listRef.current?.selectPrevious();
+    }
+  });
+
+  return (
+    <ScrollList
+      ref={listRef}
+      height={5}
+      selectedIndex={selectedIndex}
+      onSelectionChange={setSelectedIndex}
+    >
+      {items.map((item, i) => (
+        <Box key={i}>
+          <Text color={i === selectedIndex ? "blue" : "white"}>{item}</Text>
+        </Box>
+      ))}
+    </ScrollList>
+  );
+};
 ```

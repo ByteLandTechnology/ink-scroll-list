@@ -626,11 +626,45 @@ Sets a minimum width of the element.
 
 ---
 
-### onItemLayoutChange()?
+### onContentHeightChange()?
 
-> `optional` **onItemLayoutChange**: (`index`, `layout`) => `void`
+> `optional` **onContentHeightChange**: (`height`, `previousHeight`) => `void`
 
-Callback fired when a child's layout (top, height, bottom) changes.
+Callback fired when the total height of the content changes.
+
+#### Parameters
+
+##### height
+
+`number`
+
+The new total content height.
+
+##### previousHeight
+
+`number`
+
+The previous total content height.
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+Useful for debug logging or adjusting external layouts based on content size.
+
+#### Inherited from
+
+`ScrollViewProps.onContentHeightChange`
+
+---
+
+### onItemHeightChange()?
+
+> `optional` **onItemHeightChange**: (`index`, `height`, `previousHeight`) => `void`
+
+Callback fired when an individual child item's height changes.
 
 #### Parameters
 
@@ -640,21 +674,17 @@ Callback fired when a child's layout (top, height, bottom) changes.
 
 The index of the item.
 
-##### layout
-
-The new layout of the item.
-
-###### bottom
+##### height
 
 `number`
 
-###### height
+The new height of the item.
+
+##### previousHeight
 
 `number`
 
-###### top
-
-`number`
+The previous height of the item.
 
 #### Returns
 
@@ -662,42 +692,11 @@ The new layout of the item.
 
 #### Remarks
 
-This is triggered when an item's height changes. The provided layout
-includes the calculated top position based on preceding items.
+This is triggered whenever an item is re-measured and its height differs from the previous value.
 
 #### Inherited from
 
-`ScrollViewProps.onItemLayoutChange`
-
----
-
-### onLayout()?
-
-> `optional` **onLayout**: (`layout`) => `void`
-
-Callback fired when the ScrollView layout (viewport) changes.
-
-#### Parameters
-
-##### layout
-
-The new dimensions of the viewport.
-
-###### height
-
-`number`
-
-###### width
-
-`number`
-
-#### Returns
-
-`void`
-
-#### Inherited from
-
-`ScrollViewProps.onLayout`
+`ScrollViewProps.onItemHeightChange`
 
 ---
 
@@ -718,6 +717,10 @@ The new scroll offset (distance from top).
 #### Returns
 
 `void`
+
+#### Remarks
+
+Use this to sync external state or UI (e.g., scrollbars) with the current scroll position.
 
 #### Inherited from
 
@@ -747,6 +750,52 @@ The new selected index.
 
 This is called when selection changes due to internal navigation methods
 like `selectNext()` or `selectPrevious()`.
+
+---
+
+### onViewportSizeChange()?
+
+> `optional` **onViewportSizeChange**: (`size`, `previousSize`) => `void`
+
+Callback fired when the ScrollView viewport (visible area) dimensions change.
+
+#### Parameters
+
+##### size
+
+The new dimensions of the viewport (width, height).
+
+###### height
+
+`number`
+
+###### width
+
+`number`
+
+##### previousSize
+
+The previous dimensions of the viewport (width, height).
+
+###### height
+
+`number`
+
+###### width
+
+`number`
+
+#### Returns
+
+`void`
+
+#### Remarks
+
+Fired whenever the outer container size changes (e.g., terminal resize or layout update).
+
+#### Inherited from
+
+`ScrollViewProps.onViewportSizeChange`
 
 ---
 

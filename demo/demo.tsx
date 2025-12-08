@@ -159,7 +159,7 @@ const Demo = () => {
     if (listRef.current) {
       setMetrics({
         offset: listRef.current.getScrollOffset(),
-        max: listRef.current.getMaxScrollOffset(),
+        max: listRef.current.getContentHeight(),
         viewport: listRef.current.getViewportHeight(),
       });
     }
@@ -231,11 +231,17 @@ const Demo = () => {
       }
     } else if (input === "e") {
       const all = new Set(items.map((_, i) => i));
-      listRef.current?.remeasure();
-      listRef.current?.scrollToItem(listRef.current?.getSelectedIndex());
+      for (const index of all) {
+        listRef.current?.remeasureItem(index);
+      }
       setExpandedItems(all);
+      listRef.current?.scrollToItem(selectedIndex);
     } else if (input === "c") {
+      for (let index = 0; index < items.length; index++) {
+        listRef.current?.remeasureItem(index);
+      }
       setExpandedItems(new Set());
+      listRef.current?.scrollToItem(selectedIndex);
     } else if (input === "+" || input === "=") {
       setItems((prev) => [...prev, generateItem(prev.length)]);
     } else if (input === "-" || input === "_") {
@@ -246,6 +252,17 @@ const Demo = () => {
       }
     }
   });
+
+  const handleItemHeightChange = useCallback(
+    (index: number, height: number, previousHeight: number) => {
+      if (index === selectedIndex) {
+        listRef.current?.scrollToItem(selectedIndex);
+      } else if (index < selectedIndex) {
+        listRef.current?.scrollBy(height - previousHeight);
+      }
+    },
+    [selectedIndex],
+  );
 
   return (
     <Box flexDirection="column" height={process.stdout.rows - 1}>
@@ -262,7 +279,8 @@ const Demo = () => {
           width="100%"
           onSelectionChange={setSelectedIndex}
           onScroll={updateMetrics}
-          onLayout={updateMetrics}
+          onContentHeightChange={updateMetrics}
+          onItemHeightChange={handleItemHeightChange}
           selectedIndex={selectedIndex}
           scrollAlignment={alignment}
         >

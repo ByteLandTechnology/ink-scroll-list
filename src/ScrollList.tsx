@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  useMemo,
 } from "react";
 import { ScrollView, ScrollViewRef, ScrollViewProps } from "ink-scroll-view";
 
@@ -67,6 +68,12 @@ export interface ScrollListRef extends ScrollViewRef {
    *
    * @param index - The index of the child to scroll to.
    * @param mode - Alignment mode. Defaults to component's `scrollAlignment` prop.
+   *
+   * @example
+   * ```tsx
+   * // Scroll to the 5th item, aligning it to the top of the view
+   * ref.current?.scrollToItem(4, 'top');
+   * ```
    */
   scrollToItem: (index: number, mode?: ScrollAlignment) => void;
 
@@ -82,6 +89,12 @@ export interface ScrollListRef extends ScrollViewRef {
    *
    * @param index - The index to select.
    * @param mode - Alignment mode. Defaults to component's `scrollAlignment` prop.
+   *
+   * @example
+   * ```tsx
+   * // Select the 10th item
+   * ref.current?.select(9);
+   * ```
    */
   select: (index: number, mode?: ScrollAlignment) => void;
 
@@ -120,18 +133,34 @@ export interface ScrollListRef extends ScrollViewRef {
   selectLast: () => number;
 
   /**
-   * Checks if the currently selected item is fully visible.
-   *
-   * @returns `true` if the selected item is completely within the viewport.
-   */
-  isSelectedVisible: () => boolean;
-
-  /**
    * Gets the total number of items.
    *
    * @returns The count of child elements.
    */
   getItemCount: () => number;
+}
+
+/**
+ * Hook to manage state with immediate ref synchronization.
+ * Useful for values that need to be read synchronously in imperative methods
+ * but also trigger re-renders when changed.
+ */
+function useStateRef<T>(initialValue: T) {
+  const [state, setStateInternal] = useState<T>(initialValue);
+  const ref = useRef<T>(initialValue);
+
+  const setState = useCallback((update: React.SetStateAction<T>) => {
+    const nextValue =
+      typeof update === "function"
+        ? (update as (prev: T) => T)(ref.current)
+        : update;
+    ref.current = nextValue;
+    setStateInternal(nextValue);
+  }, []);
+
+  const getState = useCallback(() => ref.current, []);
+
+  return [state, setState, getState] as const;
 }
 
 /**
@@ -150,34 +179,43 @@ export interface ScrollListRef extends ScrollViewRef {
  *
  * @example
  * ```tsx
- * const listRef = useRef<ScrollListRef>(null);
- * const [selectedIndex, setSelectedIndex] = useState(0);
+ * import React, { useRef, useState } from 'react';
+ * import { Box, Text, useInput } from 'ink';
+ * import { ScrollList, ScrollListRef } from 'ink-scroll-list';
  *
- * useInput((input, key) => {
- *   if (key.downArrow) {
- *     const newIndex = listRef.current?.selectNext() ?? 0;
- *     setSelectedIndex(newIndex);
- *   }
- *   if (key.upArrow) {
- *     const newIndex = listRef.current?.selectPrevious() ?? 0;
- *     setSelectedIndex(newIndex);
- *   }
- * });
+ * const Demo = () => {
+ *   const listRef = useRef<ScrollListRef>(null);
+ *   const [selectedIndex, setSelectedIndex] = useState(0);
+ *   const items = ['Item 1', 'Item 2', 'Item 3'];
  *
- * return (
- *   <ScrollList
- *     ref={listRef}
- *     selectedIndex={selectedIndex}
- *     scrollAlignment="auto"
- *     height={10}
- *   >
- *     {items.map((item, i) => (
- *       <Box key={i} borderStyle={i === selectedIndex ? 'double' : 'single'}>
- *         <Text>{item}</Text>
- *       </Box>
- *     ))}
- *   </ScrollList>
- * );
+ *   useInput((input, key) => {
+ *     if (key.downArrow) {
+ *       // Use internal logic to select next
+ *       listRef.current?.selectNext();
+ *     }
+ *     if (key.upArrow) {
+ *       // Use internal logic to select previous
+ *       listRef.current?.selectPrevious();
+ *     }
+ *   });
+ *
+ *   return (
+ *     <ScrollList
+ *       ref={listRef}
+ *       height={5}
+ *       selectedIndex={selectedIndex}
+ *       onSelectionChange={setSelectedIndex}
+ *     >
+ *       {items.map((item, i) => (
+ *         <Box key={i}>
+ *           <Text color={i === selectedIndex ? 'blue' : 'white'}>
+ *             {item}
+ *           </Text>
+ *         </Box>
+ *       ))}
+ *     </ScrollList>
+ *   );
+ * };
  * ```
  */
 export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
@@ -188,180 +226,112 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
       scrollAlignment = "auto",
       onScroll,
       onSelectionChange,
-      onLayout,
-      onItemLayoutChange,
+      onViewportSizeChange,
+      onContentHeightChange,
+      onItemHeightChange,
       ...boxProps
     } = props;
 
+    // Internal selection state (used when not controlled)
+    const [selectedIndex, setSelectedIndex, getSelectedIndex] = useStateRef(0);
+
     const scrollViewRef = useRef<ScrollViewRef>(null);
 
-    // Internal selection state (used when not controlled)
-    const [internalSelectedIndex, setInternalSelectedIndex] = useState(0);
+    const itemCount = useMemo(() => React.Children.count(children), [children]);
 
-    // Use controlled or internal selection
-    const selectedIndex = controlledSelectedIndex ?? internalSelectedIndex;
-    const itemCount = React.Children.count(children);
-
-    // Cache the top position of the selected item to avoid full re-measurement
-    // This allows us to keep the selected item in view even if items above it change height
-    const [selectedItemOffset, setSelectedItemOffset] = useState<number | null>(
-      null,
-    );
+    useEffect(() => {
+      if (
+        controlledSelectedIndex !== undefined &&
+        controlledSelectedIndex != getSelectedIndex() &&
+        controlledSelectedIndex >= 0 &&
+        controlledSelectedIndex < itemCount
+      ) {
+        updateSelection(controlledSelectedIndex);
+      }
+    }, [controlledSelectedIndex]);
 
     // Scroll to item helper
     const scrollToItem = useCallback(
       (index: number, mode: ScrollAlignment = scrollAlignment) => {
-        let itemTop: number | undefined;
-        let itemHeight: number | undefined;
-
-        // Try to use cached offset if available and matching
-        if (index === selectedIndex && selectedItemOffset !== null) {
-          itemTop = selectedItemOffset;
-          // We still need height for bottom/center alignment.
-          // For now, let's fetch layout.
-          // Optimization: If we trust our offset, maybe we only need height.
-          const layout = scrollViewRef.current?.getItemLayout(index);
-          if (layout) itemHeight = layout.height;
-        } else {
-          const layout = scrollViewRef.current?.getItemLayout(index);
-          if (layout) {
-            itemTop = layout.top;
-            itemHeight = layout.height;
-          }
+        const position = scrollViewRef.current?.getItemPosition(index);
+        if (position === undefined || position === null) {
+          return;
         }
-
-        if (itemTop === undefined || itemHeight === undefined) return;
-
         const viewportHeight = scrollViewRef.current?.getViewportHeight() ?? 0;
         const currentScrollOffset =
           scrollViewRef.current?.getScrollOffset() ?? 0;
-        const maxScrollOffset =
-          scrollViewRef.current?.getMaxScrollOffset() ?? 0;
+        const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
 
         let targetScrollOffset = currentScrollOffset;
 
         if (mode === "top") {
-          targetScrollOffset = itemTop;
+          targetScrollOffset = position.top;
         } else if (mode === "bottom") {
-          targetScrollOffset = itemTop + itemHeight - viewportHeight;
+          targetScrollOffset = position.top + position.height - viewportHeight;
         } else if (mode === "center") {
-          targetScrollOffset = itemTop + itemHeight / 2 - viewportHeight / 2;
+          targetScrollOffset =
+            position.top + position.height / 2 - viewportHeight / 2;
         } else {
           // auto - minimal scrolling
-          const itemBottom = itemTop + itemHeight;
-          if (itemTop < currentScrollOffset) {
-            targetScrollOffset = itemTop;
+          const itemBottom = position.top + position.height;
+          if (position.top < currentScrollOffset) {
+            targetScrollOffset = position.top;
           } else if (itemBottom > currentScrollOffset + viewportHeight) {
             targetScrollOffset = itemBottom - viewportHeight;
           }
         }
-
         const clampedScrollOffset = Math.max(
           0,
-          Math.min(targetScrollOffset, maxScrollOffset),
+          Math.min(targetScrollOffset, contentHeight),
         );
         if (clampedScrollOffset !== currentScrollOffset) {
           scrollViewRef.current?.scrollTo(clampedScrollOffset);
         }
       },
-      [scrollAlignment, selectedIndex, selectedItemOffset],
+      [scrollAlignment],
     );
 
     // Update selection and notify
     const updateSelection = useCallback(
       (newIndex: number, mode?: ScrollAlignment) => {
         const clampedIndex = Math.max(0, Math.min(newIndex, itemCount - 1));
-        if (controlledSelectedIndex === undefined) {
-          setInternalSelectedIndex(clampedIndex);
-        }
-        onSelectionChange?.(clampedIndex);
-
-        // Invalidate offset temporarily until layout catches up or measure
-        // But better: Use layout if available now to set offset immediately?
-        // Actually, we don't know the new offset until it's measured if it wasn't before.
-        // For now, clear it, let effect/layout callback set it.
-        setSelectedItemOffset(null);
-
+        // Always update internal state to keep it in sync
+        setSelectedIndex(clampedIndex);
         // Scroll to item after a tick to ensure layout is measured
-        setImmediate(() => {
-          scrollToItem(clampedIndex, mode);
-        });
-
+        scrollToItem(clampedIndex, mode);
+        onSelectionChange?.(clampedIndex);
         return clampedIndex;
       },
-      [itemCount, controlledSelectedIndex, onSelectionChange, scrollToItem],
+      [itemCount, onSelectionChange, scrollToItem, selectedIndex],
     );
 
-    // Auto-scroll when selectedIndex changes
-    useEffect(() => {
-      if (selectedIndex >= 0 && selectedIndex < itemCount) {
-        // Update our cached offset if possible
-        const layout = scrollViewRef.current?.getItemLayout(selectedIndex);
-        if (layout) {
-          setSelectedItemOffset(layout.top);
-        }
-
-        setImmediate(() => {
-          scrollToItem(selectedIndex);
-        });
-      }
-    }, [selectedIndex, scrollToItem, itemCount]);
-
     // Handle layout changes (viewport resize)
-    const handleLayout = useCallback(
-      (layout: { width: number; height: number }) => {
-        onLayout?.(layout);
+    const handleViewportSizeChange = useCallback(
+      (
+        size: { width: number; height: number },
+        previousSize: { width: number; height: number },
+      ) => {
+        onViewportSizeChange?.(size, previousSize);
         // Ensure selected item is aligned per spec when viewport changes
-        setImmediate(() => {
-          scrollToItem(selectedIndex);
-        });
+        scrollToItem(getSelectedIndex());
       },
-      [onLayout, selectedIndex, scrollToItem],
+      [onViewportSizeChange, getSelectedIndex, scrollToItem],
     );
 
     // Handle item layout changes (e.g. expansion)
-    const handleItemLayoutChange = useCallback(
-      (
-        index: number,
-        layout: { top: number; height: number; bottom: number },
-      ) => {
-        onItemLayoutChange?.(index, layout);
-
-        // Update cached offset if relevant
-        if (index === selectedIndex) {
-          setSelectedItemOffset(layout.top);
-        } else if (index < selectedIndex && selectedItemOffset !== null) {
-          // If an item above changed, our offset shifts by the difference
-          // But wait, the `layout.top` of the changing item doesn't tell us the delta directly here easily
-          // unless we tracked old height.
-          // However, ScrollView is already anchoring `scrollTop`.
-          // If ScrollView anchors, `itemTop` (absolute) increases, `scrollTop` increases.
-          // `itemTop - scrollTop` (relative pos) stays same.
-          // If we want to maintain the VALIDITY of `selectedItemOffset` (which is absolute),
-          // we must strictly update it.
-          // The `layout` param passed here is the NEW layout: { top, height, bottom }.
-          // But `onItemLayoutChange` in ScrollView calculates `top` by summing.
-          // So `layout.top` is correct for `index`.
-          // But what about `selectedIndex`? We don't get its new top here.
-          // Use `ScrollView`'s re-measure or just set offset to null to force fresh lookup?
-          // Setting to null is safer but loses the "optimization" of not re-measuring.
-          // Refetching:
-          const selectedLayout =
-            scrollViewRef.current?.getItemLayout(selectedIndex);
-          if (selectedLayout) {
-            setSelectedItemOffset(selectedLayout.top);
-          }
-        }
-
+    const handleItemHeightChange = useCallback(
+      (index: number, height: number, previousHeight: number) => {
         // If changed item is same or above selected, the selected item's position
         // effectively changes relative to viewport or needs re-check.
-        if (index <= selectedIndex) {
-          setImmediate(() => {
-            scrollToItem(selectedIndex);
-          });
+        const currentSelectedIndex = getSelectedIndex();
+        if (index < currentSelectedIndex) {
+          scrollViewRef.current?.scrollBy(height - previousHeight);
+        } else if (index == currentSelectedIndex) {
+          scrollToItem(index);
         }
+        onItemHeightChange?.(index, height, previousHeight);
       },
-      [onItemLayoutChange, selectedIndex, scrollToItem, selectedItemOffset],
+      [onItemHeightChange, getSelectedIndex, scrollToItem],
     );
 
     // Expose API via ref
@@ -372,45 +342,25 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
       scrollToTop: () => scrollViewRef.current?.scrollToTop(),
       scrollToBottom: () => scrollViewRef.current?.scrollToBottom(),
       getScrollOffset: () => scrollViewRef.current?.getScrollOffset() ?? 0,
-      getMaxScrollOffset: () =>
-        scrollViewRef.current?.getMaxScrollOffset() ?? 0,
+      getContentHeight: () => scrollViewRef.current?.getContentHeight() ?? 0,
       getViewportHeight: () => scrollViewRef.current?.getViewportHeight() ?? 0,
-      getItemLayout: (index: number) =>
-        scrollViewRef.current?.getItemLayout(index) ?? null,
+      getItemHeight: (index: number) =>
+        scrollViewRef.current?.getItemHeight(index) ?? 0,
+      getItemPosition: (index: number) =>
+        scrollViewRef.current?.getItemPosition(index) ?? null,
       remeasure: () => scrollViewRef.current?.remeasure(),
       remeasureItem: (index: number) =>
         scrollViewRef.current?.remeasureItem(index),
 
       // Selection-specific methods
       scrollToItem,
-      getSelectedIndex: () => selectedIndex,
-      select: (index: number, mode?: ScrollAlignment) => {
-        updateSelection(index, mode);
-      },
-      selectNext: () => {
-        if (selectedIndex < itemCount - 1) {
-          return updateSelection(selectedIndex + 1);
-        }
-        return selectedIndex;
-      },
-      selectPrevious: () => {
-        if (selectedIndex > 0) {
-          return updateSelection(selectedIndex - 1);
-        }
-        return selectedIndex;
-      },
-      selectFirst: () => {
-        return updateSelection(0, "top");
-      },
-      selectLast: () => {
-        return updateSelection(itemCount - 1, "bottom");
-      },
-      isSelectedVisible: () => {
-        const layout = scrollViewRef.current?.getItemLayout(selectedIndex);
-        return (
-          (layout?.isVisible && layout.visibleHeight === layout.height) ?? false
-        );
-      },
+      getSelectedIndex,
+      select: (index: number, mode?: ScrollAlignment) =>
+        updateSelection(index, mode),
+      selectNext: () => updateSelection(getSelectedIndex() + 1),
+      selectPrevious: () => updateSelection(getSelectedIndex() - 1),
+      selectFirst: () => updateSelection(0, "top"),
+      selectLast: () => updateSelection(itemCount - 1, "bottom"),
       getItemCount: () => itemCount,
     }));
 
@@ -418,8 +368,9 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
       <ScrollView
         ref={scrollViewRef}
         onScroll={onScroll}
-        onLayout={handleLayout}
-        onItemLayoutChange={handleItemLayoutChange}
+        onViewportSizeChange={handleViewportSizeChange}
+        onContentHeightChange={onContentHeightChange}
+        onItemHeightChange={handleItemHeightChange}
         {...boxProps}
       >
         {children}
