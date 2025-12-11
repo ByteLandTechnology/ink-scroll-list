@@ -344,6 +344,7 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
       getScrollOffset: () => scrollViewRef.current?.getScrollOffset() ?? 0,
       getContentHeight: () => scrollViewRef.current?.getContentHeight() ?? 0,
       getViewportHeight: () => scrollViewRef.current?.getViewportHeight() ?? 0,
+      getBottomOffset: () => scrollViewRef.current?.getBottomOffset() ?? 0,
       getItemHeight: (index: number) =>
         scrollViewRef.current?.getItemHeight(index) ?? 0,
       getItemPosition: (index: number) =>
