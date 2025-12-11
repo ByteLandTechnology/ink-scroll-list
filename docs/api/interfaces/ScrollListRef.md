@@ -1,4 +1,4 @@
-[**ink-scroll-view**](../README.md)
+[**ink-scroll-list**](../README.md)
 
 ---
 
@@ -8,13 +8,37 @@ Ref interface for controlling the ScrollList programmatically.
 
 ## Remarks
 
-Extends ScrollViewRef with selection management methods.
+Extends [ScrollViewRef](https://github.com/ByteLandTechnology/ink-scroll-view) with selection management methods.
 
 ## Extends
 
-- `ScrollViewRef`
+- [`ScrollViewRef`](https://github.com/ByteLandTechnology/ink-scroll-view)
 
 ## Properties
+
+### getBottomOffset()
+
+> **getBottomOffset**: () => `number`
+
+Gets the scroll offset when the content is scrolled to the very bottom.
+
+#### Returns
+
+`number`
+
+The bottom scroll offset in terminal rows.
+
+#### Remarks
+
+This is calculated as `contentHeight - viewportHeight`. When the scroll
+offset equals this value, the last item of the content is visible at the
+bottom of the viewport.
+
+#### Inherited from
+
+`ScrollViewRef.getBottomOffset`
+
+---
 
 ### getContentHeight()
 

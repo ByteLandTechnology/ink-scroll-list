@@ -1,8 +1,8 @@
-**ink-scroll-view**
+**ink-scroll-list**
 
 ---
 
-# ink-scroll-view
+# ink-scroll-list
 
 ## Interfaces
 

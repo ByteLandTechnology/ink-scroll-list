@@ -1,4 +1,4 @@
-[**ink-scroll-view**](../README.md)
+[**ink-scroll-list**](../README.md)
 
 ---
 

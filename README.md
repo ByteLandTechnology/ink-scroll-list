@@ -13,10 +13,30 @@ A high-level ScrollList component for [Ink](https://github.com/vadimdemedes/ink)
 - **Navigation**: Built-in support for programmatic scrolling and selection (next/previous/first/last).
 - **Flexible Alignment**: Control how the selected item aligns in the viewport (`auto`, `top`, `bottom`, `center`).
 
+## 🎬 Demos
+
+### Selection & Navigation
+
+![Selection Demo](docs/_media/selection.svg)
+
+### Scroll Alignment Modes
+
+![Alignment Demo](docs/_media/alignment.svg)
+
+### Expand/Collapse
+
+![Expand Demo](docs/_media/expand.svg)
+
+### Dynamic Items
+
+![Dynamic Demo](docs/_media/dynamic.svg)
+
 ## 📦 Installation
 
 ```bash
 npm install ink-scroll-list
+# Peer dependencies
+npm install ink react
 ```
 
 ## 🚀 Usage
@@ -74,6 +94,8 @@ render(<App />);
 
 ## 📚 API Reference
 
+For detailed API documentation, see [API Reference](docs/api/README.md).
+
 ### Props (`ScrollListProps`)
 
 Extends `ScrollViewProps` from `ink-scroll-view`.
@@ -106,6 +128,17 @@ Extends `ScrollViewRef` from `ink-scroll-view`. Access these via `ref.current`.
 1.  **Controlled vs Uncontrolled**: While `ScrollList` can manage its own state, it's best practice to lift the `selectedIndex` state up to your component (as shown in the usage example) so you can use it for rendering your items (highlighting, etc.).
 2.  **Performance**: `ScrollList` uses `ink-scroll-view` under the hood, so it benefits from the same performance optimizations (virtual viewport, optimistic updates).
 3.  **Dynamic Heights**: Just like `ScrollView`, `ScrollList` supports items with variable and changing heights.
+4.  **Terminal Resizing**: Ink components don't automatically know when the terminal window resizes. You need to listen to `process.stdout`'s `resize` event and call `remeasure()` on the ref.
+
+## 🔗 Related Packages
+
+This package is part of a family of Ink scroll components:
+
+| Package                                                                  | Description                                                               |
+| :----------------------------------------------------------------------- | :------------------------------------------------------------------------ |
+| [ink-scroll-view](https://github.com/ByteLandTechnology/ink-scroll-view) | Core scroll container component                                           |
+| [ink-scroll-list](https://github.com/ByteLandTechnology/ink-scroll-list) | A scrollable list with focus management and item selection (this package) |
+| [ink-scroll-bar](https://github.com/ByteLandTechnology/ink-scroll-bar)   | A standalone scrollbar component for any scroll container                 |
 
 ## License
 

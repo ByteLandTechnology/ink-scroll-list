@@ -1,4 +1,4 @@
-[**ink-scroll-view**](../README.md)
+[**ink-scroll-list**](../README.md)
 
 ---
 
@@ -10,7 +10,7 @@ A scrollable list with built-in selection state management.
 
 ## Remarks
 
-This component extends ScrollView to provide:
+This component extends [ScrollView](https://github.com/ByteLandTechnology/ink-scroll-view) to provide:
 
 - Selection state tracking
 - Automatic scroll-into-view when selection changes

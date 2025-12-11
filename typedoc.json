@@ -3,9 +3,16 @@
   "entryPoints": ["./src/index.tsx"],
   "out": "docs/api",
   "plugin": ["typedoc-plugin-markdown"],
-  "name": "ink-scroll-view",
+  "name": "ink-scroll-list",
   "readme": "none",
   "hideBreadcrumbs": true,
   "githubPages": false,
-  "disableSources": true
+  "disableSources": true,
+  "externalSymbolLinkMappings": {
+    "ink-scroll-view": {
+      "ScrollView": "https://github.com/ByteLandTechnology/ink-scroll-view",
+      "ScrollViewProps": "https://github.com/ByteLandTechnology/ink-scroll-view",
+      "ScrollViewRef": "https://github.com/ByteLandTechnology/ink-scroll-view"
+    }
+  }
 }
