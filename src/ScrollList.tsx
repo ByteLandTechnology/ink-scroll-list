@@ -239,17 +239,6 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
 
     const itemCount = useMemo(() => React.Children.count(children), [children]);
 
-    useEffect(() => {
-      if (
-        controlledSelectedIndex !== undefined &&
-        controlledSelectedIndex != getSelectedIndex() &&
-        controlledSelectedIndex >= 0 &&
-        controlledSelectedIndex < itemCount
-      ) {
-        updateSelection(controlledSelectedIndex);
-      }
-    }, [controlledSelectedIndex]);
-
     // Scroll to item helper
     const scrollToItem = useCallback(
       (index: number, mode: ScrollAlignment = scrollAlignment) => {
@@ -304,6 +293,18 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
       },
       [itemCount, onSelectionChange, scrollToItem, selectedIndex],
     );
+
+    // Sync controlled selectedIndex with internal state
+    useEffect(() => {
+      if (
+        controlledSelectedIndex !== undefined &&
+        controlledSelectedIndex != getSelectedIndex() &&
+        controlledSelectedIndex >= 0 &&
+        controlledSelectedIndex < itemCount
+      ) {
+        updateSelection(controlledSelectedIndex);
+      }
+    }, [controlledSelectedIndex, itemCount, updateSelection, getSelectedIndex]);
 
     // Handle layout changes (viewport resize)
     const handleViewportSizeChange = useCallback(
