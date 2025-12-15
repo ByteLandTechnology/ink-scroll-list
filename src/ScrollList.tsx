@@ -312,9 +312,9 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         size: { width: number; height: number },
         previousSize: { width: number; height: number },
       ) => {
-        onViewportSizeChange?.(size, previousSize);
         // Ensure selected item is aligned per spec when viewport changes
         scrollToItem(getSelectedIndex());
+        onViewportSizeChange?.(size, previousSize);
       },
       [onViewportSizeChange, getSelectedIndex, scrollToItem],
     );
@@ -333,6 +333,16 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         onItemHeightChange?.(index, height, previousHeight);
       },
       [onItemHeightChange, getSelectedIndex, scrollToItem],
+    );
+
+    // Handle content height changes (e.g. page resize, dynamic content)
+    const handleContentHeightChange = useCallback(
+      (height: number, previousHeight: number) => {
+        // Ensure selected item remains visible when content height changes
+        scrollToItem(getSelectedIndex());
+        onContentHeightChange?.(height, previousHeight);
+      },
+      [onContentHeightChange, getSelectedIndex, scrollToItem],
     );
 
     // Expose API via ref
@@ -371,7 +381,7 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         ref={scrollViewRef}
         onScroll={onScroll}
         onViewportSizeChange={handleViewportSizeChange}
-        onContentHeightChange={onContentHeightChange}
+        onContentHeightChange={handleContentHeightChange}
         onItemHeightChange={handleItemHeightChange}
         {...boxProps}
       >

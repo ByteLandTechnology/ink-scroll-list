@@ -1,6 +1,6 @@
 {
   "name": "ink-scroll-list",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A ScrollList component for Ink CLI applications",
   "keywords": [
     "react",
@@ -35,7 +35,7 @@
     "docs": "typedoc && prettier --write docs/api"
   },
   "dependencies": {
-    "ink-scroll-view": "^0.3.1"
+    "ink-scroll-view": "^0.3.2"
   },
   "peerDependencies": {
     "ink": ">=6",
