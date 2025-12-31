@@ -241,12 +241,19 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
 
     // Scroll to item helper
     const scrollToItem = useCallback(
-      (index: number, mode: ScrollAlignment = scrollAlignment) => {
+      (
+        index: number,
+        mode: ScrollAlignment = scrollAlignment,
+        viewportHeightOverride?: number,
+      ) => {
         const position = scrollViewRef.current?.getItemPosition(index);
         if (position === undefined || position === null) {
           return;
         }
-        const viewportHeight = scrollViewRef.current?.getViewportHeight() ?? 0;
+        const viewportHeight =
+          viewportHeightOverride ??
+          scrollViewRef.current?.getViewportHeight() ??
+          0;
         const currentScrollOffset =
           scrollViewRef.current?.getScrollOffset() ?? 0;
         const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
@@ -269,9 +276,10 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
             targetScrollOffset = itemBottom - viewportHeight;
           }
         }
+        const maxScroll = Math.max(0, contentHeight - viewportHeight);
         const clampedScrollOffset = Math.max(
           0,
-          Math.min(targetScrollOffset, contentHeight),
+          Math.min(targetScrollOffset, maxScroll),
         );
         if (clampedScrollOffset !== currentScrollOffset) {
           scrollViewRef.current?.scrollTo(clampedScrollOffset);
@@ -281,6 +289,18 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
     );
 
     // Update selection and notify
+    /**
+     * Updates the internal selection state and notifies the parent.
+     *
+     * @remarks
+     * - Clamps the index to valid bounds [0, itemCount - 1].
+     * - Synchronizes internal state via setSelectedIndex.
+     * - Triggers a scroll-into-view for the new selection.
+     * - Fires the onSelectionChange callback.
+     *
+     * Note: This method is used by both internal navigation (selectNext, etc.)
+     * and when synchronizing with the controlled selectedIndex prop.
+     */
     const updateSelection = useCallback(
       (newIndex: number, mode?: ScrollAlignment) => {
         const clampedIndex = Math.max(0, Math.min(newIndex, itemCount - 1));
@@ -296,15 +316,28 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
 
     // Sync controlled selectedIndex with internal state
     useEffect(() => {
+      // Check if prop is provided and differs from internal state.
+      // We allow the prop to be out of bounds initially (e.g. 100 with count 5),
+      // because updateSelection will clamp it and sync the accurate value back.
       if (
         controlledSelectedIndex !== undefined &&
         controlledSelectedIndex != getSelectedIndex() &&
-        controlledSelectedIndex >= 0 &&
-        controlledSelectedIndex < itemCount
+        controlledSelectedIndex >= 0
+        // && controlledSelectedIndex < itemCount // CHECK REMOVED: Allow clamping of out-of-bounds props
       ) {
         updateSelection(controlledSelectedIndex);
       }
     }, [controlledSelectedIndex, itemCount, updateSelection, getSelectedIndex]);
+
+    // Clamp selection when itemCount reduces
+    useEffect(() => {
+      const current = getSelectedIndex();
+      if (itemCount > 0 && current >= itemCount) {
+        updateSelection(itemCount - 1);
+      } else if (itemCount === 0 && current !== 0) {
+        setSelectedIndex(0);
+      }
+    }, [itemCount, getSelectedIndex, updateSelection, setSelectedIndex]);
 
     // Handle layout changes (viewport resize)
     const handleViewportSizeChange = useCallback(
@@ -313,7 +346,7 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         previousSize: { width: number; height: number },
       ) => {
         // Ensure selected item is aligned per spec when viewport changes
-        scrollToItem(getSelectedIndex());
+        scrollToItem(getSelectedIndex(), undefined, size.height);
         onViewportSizeChange?.(size, previousSize);
       },
       [onViewportSizeChange, getSelectedIndex, scrollToItem],
@@ -347,9 +380,29 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
 
     // Expose API via ref
     useImperativeHandle(ref, () => ({
-      // Delegate to ScrollView
-      scrollTo: (y: number) => scrollViewRef.current?.scrollTo(y),
-      scrollBy: (delta: number) => scrollViewRef.current?.scrollBy(delta),
+      // Delegate to ScrollView with strict bounds enforcement
+      // ink-scroll-list enforces that you cannot scroll past the content bottom (no empty space),
+      // unlike the generic ScrollView which might allow it.
+      scrollTo: (y: number) => {
+        const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
+        const viewportHeight = scrollViewRef.current?.getViewportHeight() ?? 0;
+        // Clamp to ensure we never show empty space at the bottom
+        const maxScroll = Math.max(0, contentHeight - viewportHeight);
+        const clampedY = Math.max(0, Math.min(y, maxScroll));
+        scrollViewRef.current?.scrollTo(clampedY);
+      },
+      scrollBy: (delta: number) => {
+        const currentOffset = scrollViewRef.current?.getScrollOffset() ?? 0;
+        const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
+        const viewportHeight = scrollViewRef.current?.getViewportHeight() ?? 0;
+        // Clamp to ensure we never show empty space at the bottom
+        const maxScroll = Math.max(0, contentHeight - viewportHeight);
+        const clampedY = Math.max(
+          0,
+          Math.min(currentOffset + delta, maxScroll),
+        );
+        scrollViewRef.current?.scrollTo(clampedY);
+      },
       scrollToTop: () => scrollViewRef.current?.scrollToTop(),
       scrollToBottom: () => scrollViewRef.current?.scrollToBottom(),
       getScrollOffset: () => scrollViewRef.current?.getScrollOffset() ?? 0,
