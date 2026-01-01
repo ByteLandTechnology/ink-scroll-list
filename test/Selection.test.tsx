@@ -1,57 +1,54 @@
+/**
+ * @file Selection.test.tsx
+ * @description Tests for externally controlled selection behavior in ScrollList.
+ *
+ * This test suite validates that ScrollList correctly handles the `selectedIndex` prop
+ * as a fully controlled component. The component should automatically scroll to make
+ * the selected item visible whenever the prop changes.
+ *
+ * ## Test Coverage
+ * - Basic selection changes and auto-scrolling
+ * - Edge cases: out-of-bounds indices, negative indices, undefined
+ * - Dynamic navigation through the list
+ * - Empty and single-item lists
+ *
+ * ## Component Behavior Under Test
+ * ScrollList is a controlled component, meaning:
+ * - It does NOT maintain internal selection state
+ * - It does NOT clamp or validate the selectedIndex prop
+ * - It DOES scroll to make the selected item visible (when index is valid)
+ * - Invalid indices are handled gracefully (no crash, no scroll)
+ */
+
 import { useRef, useState, useEffect } from "react";
 import { render, Box, Text } from "ink";
 import { describe, it, expect } from "vitest";
 import { ScrollList, ScrollListRef } from "../src/ScrollList.js";
 
+/**
+ * Helper function to introduce artificial delays in tests.
+ * Necessary because Ink rendering is asynchronous.
+ * @param ms - Milliseconds to wait
+ */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("Selection", () => {
-  it("should handle basic selection navigation", async () => {
-    let scrollListRef: ScrollListRef | null = null;
-
-    const TestComponent = () => {
-      const ref = useRef<ScrollListRef>(null);
-      useEffect(() => {
-        scrollListRef = ref.current;
-      }, []);
-      return (
-        <ScrollList ref={ref} height={5}>
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Box key={i} height={1}>
-              <Text>Item {i}</Text>
-            </Box>
-          ))}
-        </ScrollList>
-      );
-    };
-
-    const { unmount } = render(<TestComponent />);
-    await delay(100);
-
-    const scrollList = scrollListRef!;
-
-    // Initial state
-    expect(scrollList.getSelectedIndex()).toBe(0);
-
-    // Select next
-    scrollList.selectNext();
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(1);
-
-    // Select specific
-    scrollList.select(5);
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(5);
-
-    // Select previous
-    scrollList.selectPrevious();
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(4);
-
-    unmount();
-  });
-
-  it("should support controlled selectedIndex", async () => {
+  /**
+   * Test: Basic auto-scroll behavior when selectedIndex changes.
+   *
+   * Scenario:
+   * - List with 10 items, each 1 line tall
+   * - Viewport height of 5 lines
+   * - Initial selection at index 0
+   * - Change selection to index 8, then to index 2
+   *
+   * Expected Behavior:
+   * - Selecting index 8: Should scroll down so item 8 is visible at bottom
+   *   - Item 8 is at y=8..9, viewport is 5, so offset = 9 - 5 = 4
+   * - Selecting index 2: Should scroll up so item 2 is visible at top
+   *   - Item 2 is at y=2..3, current viewport shows 4..9, so offset = 2
+   */
+  it("should scroll to selected item when selectedIndex prop changes", async () => {
     let scrollListRef: ScrollListRef | null = null;
     let setIndexFn: (i: number) => void;
 
@@ -65,12 +62,7 @@ describe("Selection", () => {
       }, []);
 
       return (
-        <ScrollList
-          ref={ref}
-          height={5}
-          selectedIndex={index}
-          onSelectionChange={setIndex}
-        >
+        <ScrollList ref={ref} height={5} selectedIndex={index}>
           {Array.from({ length: 10 }).map((_, i) => (
             <Box key={i} height={1}>
               <Text>Item {i}</Text>
@@ -84,22 +76,42 @@ describe("Selection", () => {
     await delay(100);
 
     const scrollList = scrollListRef!;
-    expect(scrollList.getSelectedIndex()).toBe(0);
 
-    // Update via prop
-    setIndexFn!(3);
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(3);
+    // Initially at index 0, should be at offset 0 (no scroll needed)
+    expect(scrollList.getScrollOffset()).toBe(0);
 
-    // Update via internal method should trigger onSelectionChange
-    scrollList.selectNext();
+    // Change to index 8, should scroll to show it (auto alignment)
+    // Item 8 spans lines 8-9. To show line 9 in viewport of 5, offset = 9 - 5 = 4
+    setIndexFn!(8);
     await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(4);
+    expect(scrollList.getScrollOffset()).toBe(4);
+
+    // Change to index 2, should scroll back up
+    // Item 2 is at line 2. Current viewport shows 4-9.
+    // Since 2 < 4, scroll to show item at top: offset = 2
+    setIndexFn!(2);
+    await delay(50);
+    expect(scrollList.getScrollOffset()).toBe(2);
 
     unmount();
   });
 
-  it("should clamp selection to valid bounds", async () => {
+  /**
+   * Test: Graceful handling of selectedIndex larger than item count.
+   *
+   * Scenario:
+   * - List with 5 items
+   * - selectedIndex set to 100 (way out of bounds)
+   *
+   * Expected Behavior:
+   * - Component should NOT crash
+   * - No scrolling should occur (getItemPosition returns null for invalid index)
+   * - Scroll offset remains at 0
+   *
+   * Note: The parent is responsible for bounds-checking. The component
+   * gracefully handles invalid indices without throwing errors.
+   */
+  it("should handle selectedIndex larger than item count gracefully", async () => {
     let scrollListRef: ScrollListRef | null = null;
 
     const TestComponent = () => {
@@ -108,7 +120,7 @@ describe("Selection", () => {
         scrollListRef = ref.current;
       }, []);
       return (
-        <ScrollList ref={ref} height={5}>
+        <ScrollList ref={ref} height={5} selectedIndex={100}>
           {Array.from({ length: 5 }).map((_, i) => (
             <Box key={i} height={1}>
               <Text>Item {i}</Text>
@@ -123,19 +135,29 @@ describe("Selection", () => {
 
     const scrollList = scrollListRef!;
 
-    // Try invalid
-    scrollList.select(-1);
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(0);
-
-    scrollList.select(100);
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(4); // max index
+    // Index 100 is out of bounds - scrollToIndex silently fails
+    // Scroll offset should remain at default (0)
+    expect(scrollList.getScrollOffset()).toBe(0);
 
     unmount();
   });
 
-  it("should handle selectNext/Previous at edges", async () => {
+  /**
+   * Test: Graceful handling of negative selectedIndex.
+   *
+   * Scenario:
+   * - List with 5 items
+   * - selectedIndex set to -1
+   *
+   * Expected Behavior:
+   * - Component should NOT crash
+   * - No auto-scrolling should occur (negative indices are ignored)
+   * - Scroll offset remains at 0
+   *
+   * Note: The component has an explicit check for selectedIndex >= 0
+   * before triggering auto-scroll.
+   */
+  it("should handle negative selectedIndex gracefully", async () => {
     let scrollListRef: ScrollListRef | null = null;
 
     const TestComponent = () => {
@@ -144,37 +166,41 @@ describe("Selection", () => {
         scrollListRef = ref.current;
       }, []);
       return (
-        <ScrollList ref={ref} height={5}>
-          <Box height={1}>
-            <Text>0</Text>
-          </Box>
-          <Box height={1}>
-            <Text>1</Text>
-          </Box>
+        <ScrollList ref={ref} height={5} selectedIndex={-1}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Box key={i} height={1}>
+              <Text>Item {i}</Text>
+            </Box>
+          ))}
         </ScrollList>
       );
     };
 
     const { unmount } = render(<TestComponent />);
     await delay(100);
+
     const scrollList = scrollListRef!;
 
-    // At 0, previous should stay 0
-    scrollList.selectPrevious();
-    expect(scrollList.getSelectedIndex()).toBe(0);
-
-    // Go to end
-    scrollList.selectNext();
-    expect(scrollList.getSelectedIndex()).toBe(1);
-
-    // At end, next should stay at end
-    scrollList.selectNext();
-    expect(scrollList.getSelectedIndex()).toBe(1);
+    // Negative index is ignored due to selectedIndex >= 0 check
+    expect(scrollList.getScrollOffset()).toBe(0);
 
     unmount();
   });
 
-  it("should support selectFirst and selectLast", async () => {
+  /**
+   * Test: Behavior when selectedIndex is undefined.
+   *
+   * Scenario:
+   * - List with 10 items
+   * - selectedIndex is undefined (not provided)
+   * - Manually scroll to position 5
+   *
+   * Expected Behavior:
+   * - No auto-scrolling should occur
+   * - Manual scrolling via ref methods should work normally
+   * - This mode allows pure scroll control without selection tracking
+   */
+  it("should handle undefined selectedIndex (no auto-scroll)", async () => {
     let scrollListRef: ScrollListRef | null = null;
 
     const TestComponent = () => {
@@ -186,7 +212,7 @@ describe("Selection", () => {
         <ScrollList ref={ref} height={5}>
           {Array.from({ length: 10 }).map((_, i) => (
             <Box key={i} height={1}>
-              <Text>{i}</Text>
+              <Text>Item {i}</Text>
             </Box>
           ))}
         </ScrollList>
@@ -195,171 +221,142 @@ describe("Selection", () => {
 
     const { unmount } = render(<TestComponent />);
     await delay(100);
+
     const scrollList = scrollListRef!;
 
-    scrollList.selectLast();
+    // Manual scroll should work even without selectedIndex
+    scrollList.scrollTo(5);
     await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(9);
-    expect(scrollList.getScrollOffset()).toBeGreaterThan(0); // Should have scrolled
-
-    scrollList.selectFirst();
-    await delay(50);
-    expect(scrollList.getSelectedIndex()).toBe(0);
-    expect(scrollList.getScrollOffset()).toBe(0);
+    expect(scrollList.getScrollOffset()).toBe(5);
 
     unmount();
   });
-  describe("Dynamic Updates", () => {
-    it("should maintain selected index when items are added at the end", async () => {
+
+  /**
+   * Test: Rapid sequential selectedIndex changes (keyboard navigation simulation).
+   *
+   * Scenario:
+   * - List with 20 items
+   * - Viewport height of 3 lines
+   * - Rapidly change selectedIndex from 0 to 15
+   *
+   * Expected Behavior:
+   * - Final scroll position should show item 15 visible
+   * - Item 15 is at lines 15-16, viewport is 3, so offset = 16 - 3 = 13
+   * - All intermediate scroll animations should be handled correctly
+   */
+  it("should handle dynamic selectedIndex changes", async () => {
+    let scrollListRef: ScrollListRef | null = null;
+    let setIndexFn: (i: number) => void;
+
+    const TestComponent = () => {
+      const ref = useRef<ScrollListRef>(null);
+      const [index, setIndex] = useState(0);
+
+      useEffect(() => {
+        scrollListRef = ref.current;
+        setIndexFn = setIndex;
+      }, []);
+
+      return (
+        <ScrollList ref={ref} height={3} selectedIndex={index}>
+          {Array.from({ length: 20 }).map((_, i) => (
+            <Box key={i} height={1}>
+              <Text>Item {i}</Text>
+            </Box>
+          ))}
+        </ScrollList>
+      );
+    };
+
+    const { unmount } = render(<TestComponent />);
+    await delay(100);
+
+    // Simulate rapid keyboard navigation
+    for (let i = 0; i <= 15; i++) {
+      setIndexFn!(i);
+      await delay(50); // Allow time for React to process state updates and scroll
+    }
+
+    const scrollList = scrollListRef!;
+    // After selecting 15, it should be visible at bottom of viewport
+    // Item 15 at lines 15-16. Viewport 3. Offset = 16 - 3 = 13
+    expect(scrollList.getScrollOffset()).toBe(13);
+
+    unmount();
+  });
+
+  /**
+   * Tests for edge case: empty list.
+   */
+  describe("With Empty List", () => {
+    /**
+     * Test: Empty list with selectedIndex=0.
+     *
+     * Scenario:
+     * - ScrollList with no children
+     * - selectedIndex set to 0
+     *
+     * Expected Behavior:
+     * - Component should NOT crash
+     * - Scroll offset should be 0
+     * - Content height should be 0
+     */
+    it("should handle empty list gracefully", async () => {
       let scrollListRef: ScrollListRef | null = null;
-      let setItemsFn: any;
 
       const TestComponent = () => {
         const ref = useRef<ScrollListRef>(null);
-        const [items, setItems] = useState([1, 2, 3]);
-
-        // Ensure ref is up to date
         useEffect(() => {
           scrollListRef = ref.current;
-        });
-
-        useEffect(() => {
-          setItemsFn = setItems;
         }, []);
-
         return (
-          <ScrollList ref={ref} height={5}>
-            {items.map((i) => (
-              <Box key={i} height={1}>
-                <Text>{i}</Text>
-              </Box>
-            ))}
+          <ScrollList ref={ref} height={5} selectedIndex={0}>
+            {/* Empty list - no children */}
           </ScrollList>
         );
       };
 
       const { unmount } = render(<TestComponent />);
       await delay(100);
+      const scrollList = scrollListRef!;
 
-      // Select index 2 (Item 3)
-      scrollListRef!.select(2);
-      expect(scrollListRef!.getSelectedIndex()).toBe(2);
-
-      // Add items at end
-      setItemsFn([1, 2, 3, 4, 5]);
-      await delay(100);
-
-      // Should stay at index 2 (Item 3)
-      expect(scrollListRef!.getSelectedIndex()).toBe(2);
-
-      unmount();
-    });
-
-    it("should maintain selected index when items are added at the start (selection points to new item)", async () => {
-      let scrollListRef: ScrollListRef | null = null;
-      let setItemsFn: any;
-
-      const TestComponent = () => {
-        const ref = useRef<ScrollListRef>(null);
-        const [items, setItems] = useState([1, 2, 3]);
-
-        useEffect(() => {
-          scrollListRef = ref.current;
-        });
-
-        useEffect(() => {
-          setItemsFn = setItems;
-        }, []);
-
-        return (
-          <ScrollList ref={ref} height={5}>
-            {items.map((i) => (
-              <Box key={i} height={1}>
-                <Text>{i}</Text>
-              </Box>
-            ))}
-          </ScrollList>
-        );
-      };
-
-      const { unmount } = render(<TestComponent />);
-      await delay(100);
-
-      // Select index 0 (Item 1)
-      scrollListRef!.select(0);
-      expect(scrollListRef!.getSelectedIndex()).toBe(0);
-
-      // Add 0 at start: [0, 1, 2, 3]
-      setItemsFn([0, 1, 2, 3]);
-      await delay(100);
-
-      // Should stay at index 0 (now Item 0)
-      // Note: ScrollList tracks index, not item identity.
-      expect(scrollListRef!.getSelectedIndex()).toBe(0);
-
-      unmount();
-    });
-
-    it("should maintain selected index when items are removed before selection (selection shifts to new item)", async () => {
-      let scrollListRef: ScrollListRef | null = null;
-      let setItemsFn: any;
-
-      const TestComponent = () => {
-        const ref = useRef<ScrollListRef>(null);
-        const [items, setItems] = useState([1, 2, 3, 4, 5]);
-
-        useEffect(() => {
-          scrollListRef = ref.current;
-        });
-
-        useEffect(() => {
-          setItemsFn = setItems;
-        }, []);
-
-        return (
-          <ScrollList ref={ref} height={5}>
-            {items.map((i) => (
-              <Box key={i} height={1}>
-                <Text>{i}</Text>
-              </Box>
-            ))}
-          </ScrollList>
-        );
-      };
-
-      const { unmount } = render(<TestComponent />);
-      await delay(100);
-
-      // Select index 2 (Item 3)
-      scrollListRef!.select(2);
-      expect(scrollListRef!.getSelectedIndex()).toBe(2);
-
-      // Remove Item 1 (index 0). New list: [2, 3, 4, 5]
-      setItemsFn([2, 3, 4, 5]);
-      await delay(100);
-
-      // Should stay at index 2.
-      // Index 0: 2
-      // Index 1: 3
-      // Index 2: 4
-      // So now selected item is 4.
-      expect(scrollListRef!.getSelectedIndex()).toBe(2);
+      // Empty list should have zero metrics and no crashes
+      expect(scrollList.getScrollOffset()).toBe(0);
+      expect(scrollList.getContentHeight()).toBe(0);
 
       unmount();
     });
   });
-  describe("Boundary Cases", () => {
-    it("should handle navigation in a single-item list", async () => {
+
+  /**
+   * Tests for edge case: single item list.
+   */
+  describe("With Single Item", () => {
+    /**
+     * Test: Single item list.
+     *
+     * Scenario:
+     * - ScrollList with exactly one child
+     * - selectedIndex set to 0
+     *
+     * Expected Behavior:
+     * - Component should work normally
+     * - Scroll offset should be 0 (item fits in viewport)
+     * - Content height should be 1
+     */
+    it("should handle single-item list", async () => {
       let scrollListRef: ScrollListRef | null = null;
+
       const TestComponent = () => {
         const ref = useRef<ScrollListRef>(null);
         useEffect(() => {
           scrollListRef = ref.current;
         }, []);
         return (
-          <ScrollList ref={ref} height={5}>
+          <ScrollList ref={ref} height={5} selectedIndex={0}>
             <Box height={1}>
-              <Text>Item 0</Text>
+              <Text>Only Item</Text>
             </Box>
           </ScrollList>
         );
@@ -369,32 +366,47 @@ describe("Selection", () => {
       await delay(100);
       const scrollList = scrollListRef!;
 
-      expect(scrollList.getSelectedIndex()).toBe(0);
-
-      scrollList.selectNext();
-      expect(scrollList.getSelectedIndex()).toBe(0);
-
-      scrollList.selectPrevious();
-      expect(scrollList.getSelectedIndex()).toBe(0);
-
-      scrollList.selectLast();
-      expect(scrollList.getSelectedIndex()).toBe(0);
+      // Single item should work correctly
+      expect(scrollList.getScrollOffset()).toBe(0);
+      expect(scrollList.getContentHeight()).toBe(1);
 
       unmount();
     });
+  });
 
-    it("should clamp controlled selectedIndex if passed out of bounds", async () => {
+  /**
+   * Tests for scroll constraint behavior.
+   *
+   * When a selected item exists, scroll methods (scrollTo, scrollBy, scrollToTop,
+   * scrollToBottom) are constrained to keep the selected item visible in the viewport.
+   */
+  describe("Scroll Constraints", () => {
+    /**
+     * Test: scrollTo is constrained to keep selected item visible.
+     *
+     * Scenario:
+     * - 20 items, viewport 5, selectedIndex = 10
+     * - Item 10 is at line 10. Visible bounds: [10+1-5, 10] = [6, 10]
+     * - Try to scroll outside these bounds
+     *
+     * Expected:
+     * - scrollTo(0) should clamp to 6 (min offset to keep item 10 visible)
+     * - scrollTo(15) should clamp to 10 (max offset to keep item 10 visible)
+     * - scrollTo(8) should work (within bounds)
+     */
+    it("should constrain scrollTo to keep selected item visible", async () => {
       let scrollListRef: ScrollListRef | null = null;
+
       const TestComponent = () => {
         const ref = useRef<ScrollListRef>(null);
         useEffect(() => {
           scrollListRef = ref.current;
         }, []);
         return (
-          <ScrollList ref={ref} height={5} selectedIndex={100}>
-            {Array.from({ length: 5 }).map((_, i) => (
+          <ScrollList ref={ref} height={5} selectedIndex={10}>
+            {Array.from({ length: 20 }).map((_, i) => (
               <Box key={i} height={1}>
-                <Text>{i}</Text>
+                <Text>Item {i}</Text>
               </Box>
             ))}
           </ScrollList>
@@ -403,10 +415,292 @@ describe("Selection", () => {
 
       const { unmount } = render(<TestComponent />);
       await delay(100);
+
       const scrollList = scrollListRef!;
 
-      // Should auto-clamp to max index (4)
-      expect(scrollList.getSelectedIndex()).toBe(4);
+      // Item 10: top=10, height=1. Visible bounds: [6, 10]
+
+      // Try to scroll to 0 - should clamp to 6
+      scrollList.scrollTo(0);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(6);
+
+      // Try to scroll to 15 - should clamp to 10
+      scrollList.scrollTo(15);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(10);
+
+      // Scroll to 8 - within bounds, should work
+      scrollList.scrollTo(8);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(8);
+
+      unmount();
+    });
+
+    /**
+     * Test: scrollToTop is constrained to keep selected item visible.
+     *
+     * Scenario:
+     * - 20 items, viewport 5, selectedIndex = 10
+     * - scrollToTop should scroll to min offset that keeps item 10 visible
+     *
+     * Expected: Offset = 6 (item 10 at bottom of viewport)
+     */
+    it("should constrain scrollToTop to keep selected item visible", async () => {
+      let scrollListRef: ScrollListRef | null = null;
+
+      const TestComponent = () => {
+        const ref = useRef<ScrollListRef>(null);
+        useEffect(() => {
+          scrollListRef = ref.current;
+        }, []);
+        return (
+          <ScrollList ref={ref} height={5} selectedIndex={10}>
+            {Array.from({ length: 20 }).map((_, i) => (
+              <Box key={i} height={1}>
+                <Text>Item {i}</Text>
+              </Box>
+            ))}
+          </ScrollList>
+        );
+      };
+
+      const { unmount } = render(<TestComponent />);
+      await delay(100);
+
+      const scrollList = scrollListRef!;
+
+      // scrollToTop with item 10 selected should go to min offset = 6
+      scrollList.scrollToTop();
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(6);
+
+      unmount();
+    });
+
+    /**
+     * Test: scrollToBottom is constrained to keep selected item visible.
+     *
+     * Scenario:
+     * - 20 items, viewport 5, selectedIndex = 5
+     * - Max scroll = 20 - 5 = 15
+     * - Item 5 visible bounds: [1, 5]
+     * - scrollToBottom should scroll to max offset that keeps item 5 visible
+     *
+     * Expected: Offset = 5 (item 5 at top of viewport)
+     */
+    it("should constrain scrollToBottom to keep selected item visible", async () => {
+      let scrollListRef: ScrollListRef | null = null;
+
+      const TestComponent = () => {
+        const ref = useRef<ScrollListRef>(null);
+        useEffect(() => {
+          scrollListRef = ref.current;
+        }, []);
+        return (
+          <ScrollList ref={ref} height={5} selectedIndex={5}>
+            {Array.from({ length: 20 }).map((_, i) => (
+              <Box key={i} height={1}>
+                <Text>Item {i}</Text>
+              </Box>
+            ))}
+          </ScrollList>
+        );
+      };
+
+      const { unmount } = render(<TestComponent />);
+      await delay(100);
+
+      const scrollList = scrollListRef!;
+
+      // scrollToBottom with item 5 selected should go to max offset = 5
+      // (because item 5 visible range is [1, 5])
+      scrollList.scrollToBottom();
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(5);
+
+      unmount();
+    });
+
+    /**
+     * Test: scrollBy is constrained to keep selected item visible.
+     *
+     * Scenario:
+     * - 20 items, viewport 5, selectedIndex = 10
+     * - Start at offset 8 (within valid range [6, 10])
+     * - scrollBy(-5) should clamp to 6, not 3
+     * - scrollBy(+5) should clamp to 10, not 13
+     */
+    it("should constrain scrollBy to keep selected item visible", async () => {
+      let scrollListRef: ScrollListRef | null = null;
+
+      const TestComponent = () => {
+        const ref = useRef<ScrollListRef>(null);
+        useEffect(() => {
+          scrollListRef = ref.current;
+        }, []);
+        return (
+          <ScrollList ref={ref} height={5} selectedIndex={10}>
+            {Array.from({ length: 20 }).map((_, i) => (
+              <Box key={i} height={1}>
+                <Text>Item {i}</Text>
+              </Box>
+            ))}
+          </ScrollList>
+        );
+      };
+
+      const { unmount } = render(<TestComponent />);
+      await delay(100);
+
+      const scrollList = scrollListRef!;
+
+      // Start at offset 8 (within [6, 10])
+      scrollList.scrollTo(8);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(8);
+
+      // scrollBy(-5): 8 - 5 = 3, but min is 6, so should be 6
+      scrollList.scrollBy(-5);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(6);
+
+      // scrollBy(+10): 6 + 10 = 16, but max is 10, so should be 10
+      scrollList.scrollBy(10);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(10);
+
+      unmount();
+    });
+
+    /**
+     * Test: No scroll constraint when selectedIndex is undefined.
+     *
+     * Scenario:
+     * - 10 items, viewport 5, no selectedIndex
+     * - scrollTo should only be constrained by global bounds [0, 5]
+     */
+    it("should not constrain scroll when no selectedIndex", async () => {
+      let scrollListRef: ScrollListRef | null = null;
+
+      const TestComponent = () => {
+        const ref = useRef<ScrollListRef>(null);
+        useEffect(() => {
+          scrollListRef = ref.current;
+        }, []);
+        return (
+          <ScrollList ref={ref} height={5}>
+            {Array.from({ length: 10 }).map((_, i) => (
+              <Box key={i} height={1}>
+                <Text>Item {i}</Text>
+              </Box>
+            ))}
+          </ScrollList>
+        );
+      };
+
+      const { unmount } = render(<TestComponent />);
+      await delay(100);
+
+      const scrollList = scrollListRef!;
+
+      // Global max scroll = 10 - 5 = 5
+      // Without selectedIndex, we can scroll freely within [0, 5]
+      scrollList.scrollTo(5);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(5);
+
+      scrollList.scrollToTop();
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(0);
+
+      scrollList.scrollToBottom();
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(5);
+
+      unmount();
+    });
+
+    /**
+     * Test: Scroll constraints for items larger than the viewport.
+     *
+     * Scenario:
+     * - 3 items: small (1), large (10), small (1)
+     * - Viewport 5, select the large item (index 1)
+     * - Large item at top=1, height=10, bottom=11
+     *
+     * When item > viewport, the constraint is swapped:
+     * - calculated min = 1 + 10 - 5 = 6 (item bottom at viewport bottom)
+     * - calculated max = 1 (item top at viewport top)
+     * - Since min > max, swap them: min=1, max=6
+     * - This allows scrolling within the item to see different parts
+     *
+     * Expected:
+     * - scrollToTop should go to 1 (item top visible)
+     * - scrollToBottom should go to 6 (item bottom visible)
+     * - scrollTo(3) should work (within [1, 6])
+     * - scrollTo(0) should clamp to 1
+     * - scrollTo(10) should clamp to 6
+     */
+    it("should allow scrolling within large items (item > viewport)", async () => {
+      let scrollListRef: ScrollListRef | null = null;
+
+      const TestComponent = () => {
+        const ref = useRef<ScrollListRef>(null);
+        useEffect(() => {
+          scrollListRef = ref.current;
+        }, []);
+        return (
+          <ScrollList ref={ref} height={5} selectedIndex={1}>
+            <Box height={1}>
+              <Text>Small 0</Text>
+            </Box>
+            <Box height={10}>
+              <Text>Large Item (height 10)</Text>
+            </Box>
+            <Box height={1}>
+              <Text>Small 2</Text>
+            </Box>
+          </ScrollList>
+        );
+      };
+
+      const { unmount } = render(<TestComponent />);
+      await delay(100);
+
+      const scrollList = scrollListRef!;
+
+      // Large item: top=1, height=10, bottom=11
+      // Total content height = 1 + 10 + 1 = 12
+      // Global max scroll = 12 - 5 = 7
+      // Item visible bounds (before swap): min=6, max=1
+      // After swap: min=1, max=6
+
+      // Try scrollTo(0) - should clamp to min=1
+      scrollList.scrollTo(0);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(1);
+
+      // scrollToTop should go to min=1
+      scrollList.scrollToTop();
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(1);
+
+      // scrollTo(3) should work (within [1, 6])
+      scrollList.scrollTo(3);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(3);
+
+      // scrollTo(10) should clamp to max=6
+      scrollList.scrollTo(10);
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(6);
+
+      // scrollToBottom should go to max=6
+      scrollList.scrollToBottom();
+      await delay(50);
+      expect(scrollList.getScrollOffset()).toBe(6);
 
       unmount();
     });

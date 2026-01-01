@@ -8,7 +8,35 @@ Ref interface for controlling the ScrollList programmatically.
 
 ## Remarks
 
-Extends [ScrollViewRef](https://github.com/ByteLandTechnology/ink-scroll-view) with selection management methods.
+Extends [ScrollViewRef](https://github.com/ByteLandTechnology/ink-scroll-view) from ink-scroll-view. Since selection is now controlled
+externally via props, this interface no longer includes selection-related methods.
+
+**Scroll Constraint Behavior**:
+When a `selectedIndex` is set, all scroll methods (`scrollTo`, `scrollBy`, `scrollToTop`,
+`scrollToBottom`) are constrained to keep the selected item visible in the viewport.
+This prevents accidentally scrolling the selection out of view.
+
+For items larger than the viewport, scrolling is allowed within the item's bounds,
+letting users view different parts of the large item while keeping at least part
+of it visible.
+
+**Available Methods** (inherited from ScrollViewRef):
+
+- `scrollTo(y)`: Scroll to a specific offset (constrained if selected item exists)
+- `scrollBy(delta)`: Scroll by a relative amount (constrained)
+- `scrollToTop()`: Scroll as far up as possible while keeping selection visible
+- `scrollToBottom()`: Scroll as far down as possible while keeping selection visible
+- `getScrollOffset()`: Get the current scroll offset
+- `getContentHeight()`: Get the total content height
+- `getViewportHeight()`: Get the viewport height
+- `getBottomOffset()`: Get the offset from the bottom
+- `getItemHeight(index)`: Get a specific item's height
+- `getItemPosition(index)`: Get a specific item's position (top and height)
+- `remeasure()`: Force remeasurement of all items
+- `remeasureItem(index)`: Force remeasurement of a specific item
+
+**Note**: Unlike previous versions, there are no selection methods (select, selectNext, etc.)
+as selection is now controlled externally via the `selectedIndex` prop.
 
 ## Extends
 
@@ -59,20 +87,6 @@ This is the sum of the heights of all child items.
 #### Inherited from
 
 `ScrollViewRef.getContentHeight`
-
----
-
-### getItemCount()
-
-> **getItemCount**: () => `number`
-
-Gets the total number of items.
-
-#### Returns
-
-`number`
-
-The count of child elements.
 
 ---
 
@@ -149,20 +163,6 @@ at the very top (no scrolling has occurred).
 #### Inherited from
 
 `ScrollViewRef.getScrollOffset`
-
----
-
-### getSelectedIndex()
-
-> **getSelectedIndex**: () => `number`
-
-Gets the currently selected index.
-
-#### Returns
-
-`number`
-
-The current selection index, or `-1` if nothing is selected.
 
 ---
 
@@ -329,39 +329,6 @@ This calculates the target offset as `contentHeight - viewportHeight`.
 
 ---
 
-### scrollToItem()
-
-> **scrollToItem**: (`index`, `mode?`) => `void`
-
-Scrolls to a specific child item by index.
-
-#### Parameters
-
-##### index
-
-`number`
-
-The index of the child to scroll to.
-
-##### mode?
-
-[`ScrollAlignment`](../type-aliases/ScrollAlignment.md)
-
-Alignment mode. Defaults to component's `scrollAlignment` prop.
-
-#### Returns
-
-`void`
-
-#### Example
-
-```tsx
-// Scroll to the 5th item, aligning it to the top of the view
-ref.current?.scrollToItem(4, "top");
-```
-
----
-
 ### scrollToTop()
 
 > **scrollToTop**: () => `void`
@@ -375,100 +342,3 @@ Scrolls to the very top (position 0).
 #### Inherited from
 
 `ScrollViewRef.scrollToTop`
-
----
-
-### select()
-
-> **select**: (`index`, `mode?`) => `void`
-
-Selects an item by index and scrolls to make it visible.
-
-#### Parameters
-
-##### index
-
-`number`
-
-The index to select.
-
-##### mode?
-
-[`ScrollAlignment`](../type-aliases/ScrollAlignment.md)
-
-Alignment mode. Defaults to component's `scrollAlignment` prop.
-
-#### Returns
-
-`void`
-
-#### Example
-
-```tsx
-// Select the 10th item
-ref.current?.select(9);
-```
-
----
-
-### selectFirst()
-
-> **selectFirst**: () => `number`
-
-Selects the first item and scrolls to the top.
-
-#### Returns
-
-`number`
-
-The new selected index (0).
-
----
-
-### selectLast()
-
-> **selectLast**: () => `number`
-
-Selects the last item and scrolls to the bottom.
-
-#### Returns
-
-`number`
-
-The new selected index.
-
----
-
-### selectNext()
-
-> **selectNext**: () => `number`
-
-Selects the next item and scrolls to make it visible.
-
-#### Returns
-
-`number`
-
-The new selected index.
-
-#### Remarks
-
-Does nothing if already at the last item.
-
----
-
-### selectPrevious()
-
-> **selectPrevious**: () => `number`
-
-Selects the previous item and scrolls to make it visible.
-
-#### Returns
-
-`number`
-
-The new selected index.
-
-#### Remarks
-
-Does nothing if already at the first item.

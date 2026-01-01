@@ -1,20 +1,43 @@
+/**
+ * @file Content.test.tsx
+ * @description Tests for content height calculation and management in ScrollList.
+ *
+ * This test suite validates that ScrollList correctly tracks and reports content
+ * height as items are added, removed, resized, or replaced. Since ScrollList wraps
+ * ink-scroll-view's ScrollView, these tests verify proper delegation and callback handling.
+ *
+ * ## Test Coverage
+ * - Content height updates when items are added or removed
+ * - Content height updates when individual item heights change
+ * - Manual remeasurement via `remeasureItem()` for internal content changes
+ * - Accurate triggering of `onContentHeightChange` callback
+ *
+ * ## Dependencies
+ * - Uses ink-scroll-view's measurement system under the hood
+ * - Items must use explicit height or flex behavior for accurate measurement
+ */
+
 import { useRef, useState, useEffect } from "react";
 import { render, Box, Text } from "ink";
 import { describe, it, expect, vi } from "vitest";
 import { ScrollList, ScrollListRef } from "../src/ScrollList.js";
 
+/**
+ * Helper function to introduce artificial delays in tests.
+ * Necessary because Ink rendering is asynchronous.
+ */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * Tests for content height calculation logic in ScrollList.
- *
- * @remarks
- * Verifies that the component accurately tracks total height as children are added, removed, resized, or replaced.
- * Since ScrollList constructs a ScrollView, we test that it delegates correctly.
- */
 describe("ContentHeight", () => {
   /**
-   * Verifies that ContentHeight updates correctly when elements are added or removed.
+   * Test: Content height updates when elements are added or removed.
+   *
+   * Scenario:
+   * - Start with 2 items (total height 2)
+   * - Add 2 more items (total height 4)
+   * - Remove 3 items (total height 1)
+   *
+   * Expected: `getContentHeight()` returns the accurate sum of all item heights
    */
   it("should update ContentHeight when adding/removing elements", async () => {
     let scrollListRef: ScrollListRef | null = null;

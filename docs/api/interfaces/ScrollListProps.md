@@ -8,8 +8,14 @@ Props for the ScrollList component.
 
 ## Remarks
 
-Extends [ScrollViewProps](https://github.com/ByteLandTechnology/ink-scroll-view) and adds selection state management
-with automatic scroll-into-view behavior.
+Extends [ScrollViewProps](https://github.com/ByteLandTechnology/ink-scroll-view) from ink-scroll-view and adds externally controlled
+selection with automatic scroll-into-view behavior.
+
+**Key Differences from Previous Versions**:
+
+- Selection state is now fully controlled by the parent (no internal state)
+- Removed `onSelectionChange` callback (parent manages state directly)
+- Removed imperative selection methods (`select`, `selectNext`, etc.)
 
 ## Extends
 
@@ -375,9 +381,9 @@ false;
 
 ---
 
-### children
+### children?
 
-> **children**: `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\> \| `ReactElement`\<`unknown`, `string` \| `JSXElementConstructor`\<`any`\>\>[]
+> `optional` **children**: `ReactNode`
 
 The content to be scrolled.
 
@@ -746,31 +752,6 @@ Use this to sync external state or UI (e.g., scrollbars) with the current scroll
 
 ---
 
-### onSelectionChange()?
-
-> `optional` **onSelectionChange**: (`index`) => `void`
-
-Callback fired when the selected index changes internally.
-
-#### Parameters
-
-##### index
-
-`number`
-
-The new selected index.
-
-#### Returns
-
-`void`
-
-#### Remarks
-
-This is called when selection changes due to internal navigation methods
-like `selectNext()` or `selectPrevious()`.
-
----
-
 ### onViewportSizeChange()?
 
 > `optional` **onViewportSizeChange**: (`size`, `previousSize`) => `void`
@@ -985,10 +966,24 @@ Alignment mode when scrolling to the selected item.
 
 #### Remarks
 
-- `'auto'`: Minimal scrolling to bring item into view (default).
-- `'top'`: Align item to the top of the viewport.
+Controls how the selected item is positioned within the viewport when auto-scrolling.
+
+**Modes**:
+
+- `'auto'`: Minimal scrolling to bring item into view (default). Best for keyboard navigation.
+- `'top'`: Align item to the top of the viewport. Good for "jump to" navigation.
 - `'bottom'`: Align item to the bottom of the viewport.
-- `'center'`: Align item to the center of the viewport.
+- `'center'`: Align item to the center of the viewport. Best for search result highlighting.
+
+**Examples**:
+
+```tsx
+// Default auto behavior - minimal scrolling
+<ScrollList selectedIndex={index} scrollAlignment="auto" />
+
+// Always center the selected item - good for search/spotlight UX
+<ScrollList selectedIndex={searchResultIndex} scrollAlignment="center" />
+```
 
 #### Default Value
 
@@ -1000,12 +995,37 @@ Alignment mode when scrolling to the selected item.
 
 > `optional` **selectedIndex**: `number`
 
-The currently selected item index.
+The currently selected item index (controlled by parent).
 
 #### Remarks
 
 When this value changes, the component will automatically scroll to ensure
-the selected item is visible in the viewport.
+the selected item is visible in the viewport according to the `scrollAlignment` mode.
+
+**Important Behaviors**:
+
+- The selection state is entirely controlled by the parent component.
+- Invalid indices (negative or >= item count) are handled gracefully - no scrolling occurs.
+- When `undefined`, the component does not perform auto-scrolling (useful for manual scroll control).
+- The component does NOT clamp or modify this value - the parent is responsible for bounds checking.
+
+#### Example
+
+```tsx
+const [selectedIndex, setSelectedIndex] = useState(0);
+
+useInput((input, key) => {
+  if (key.downArrow) {
+    setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1));
+  }
+});
+
+<ScrollList selectedIndex={selectedIndex}>
+  {items.map((item, i) => (
+    <ListItem key={i} selected={i === selectedIndex} />
+  ))}
+</ScrollList>;
+```
 
 ---
 
