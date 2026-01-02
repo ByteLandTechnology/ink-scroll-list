@@ -361,9 +361,7 @@ const SelectionDemo = ({
       timeouts.push(
         setTimeout(
           () => {
-            const newIndex = leftRef.current?.selectNext() ?? 0;
-            rightRef.current?.select(newIndex);
-            setSelectedIndex(newIndex);
+            setSelectedIndex((prev) => Math.min(14, prev + 1));
           },
           1000 + i * 400,
         ),
@@ -379,9 +377,7 @@ const SelectionDemo = ({
       timeouts.push(
         setTimeout(
           () => {
-            const newIndex = leftRef.current?.selectPrevious() ?? 0;
-            rightRef.current?.select(newIndex);
-            setSelectedIndex(newIndex);
+            setSelectedIndex((prev) => Math.max(0, prev - 1));
           },
           5500 + i * 400,
         ),
@@ -394,9 +390,7 @@ const SelectionDemo = ({
     );
     timeouts.push(
       setTimeout(() => {
-        const newIndex = leftRef.current?.selectLast() ?? 0;
-        rightRef.current?.select(newIndex);
-        setSelectedIndex(newIndex);
+        setSelectedIndex(14);
       }, 8500),
     );
 
@@ -406,9 +400,7 @@ const SelectionDemo = ({
     );
     timeouts.push(
       setTimeout(() => {
-        const newIndex = leftRef.current?.selectFirst() ?? 0;
-        rightRef.current?.select(newIndex);
-        setSelectedIndex(newIndex);
+        setSelectedIndex(0);
       }, 10500),
     );
 
@@ -478,8 +470,6 @@ const AlignmentDemo = ({
     // Helper to select and demonstrate alignment
     const selectWithAlignment = (index: number, mode: ScrollAlignment) => {
       setAlignment(mode);
-      leftRef.current?.select(index, mode);
-      rightRef.current?.select(index, mode);
       setSelectedIndex(index);
     };
 
@@ -576,6 +566,7 @@ const ExpandDemo = ({
   const [description, setDescription] = useState("Initializing expand demo...");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [alignment, setAlignment] = useState<ScrollAlignment>("auto");
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
 
   // Total number of items
@@ -592,13 +583,9 @@ const ExpandDemo = ({
     }, 100);
 
     // Helper to select an item with alignment
-    const selectItem = (
-      index: number,
-      mode: "auto" | "top" | "bottom" | "center" = "auto",
-    ) => {
-      leftRef.current?.select(index, mode);
-      rightRef.current?.select(index, mode);
+    const selectItem = (index: number, mode: ScrollAlignment = "auto") => {
       setSelectedIndex(index);
+      setAlignment(mode);
     };
 
     // Helper to expand an item
@@ -743,6 +730,7 @@ const ExpandDemo = ({
       rightRef={rightRef}
       selectedIndex={selectedIndex}
       scrollOffset={scrollOffset}
+      alignment={alignment}
       height={8}
     >
       {items}
@@ -771,6 +759,7 @@ const DynamicItemsDemo = ({
   );
   const [selectedIndex, setSelectedIndex] = useState(2); // Start in the middle
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [alignment, setAlignment] = useState<ScrollAlignment>("auto");
   const [items, setItems] = useState<
     { id: number; label: string; color?: string }[]
   >(Array.from({ length: 5 }, (_, i) => ({ id: i, label: `Item ${i + 1}` })));
@@ -797,8 +786,8 @@ const DynamicItemsDemo = ({
     t += 500;
     timeouts.push(
       setTimeout(() => {
-        leftRef.current?.select(2, "center");
-        rightRef.current?.select(2, "center");
+        setSelectedIndex(2);
+        setAlignment("center");
       }, t),
     );
 
@@ -930,6 +919,7 @@ const DynamicItemsDemo = ({
       rightRef={rightRef}
       selectedIndex={selectedIndex}
       scrollOffset={scrollOffset}
+      alignment={alignment}
       height={8}
     >
       {renderedItems}

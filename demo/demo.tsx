@@ -189,9 +189,9 @@ const Demo = () => {
 
     // Navigation
     if (key.upArrow) {
-      listRef.current?.selectPrevious();
+      setSelectedIndex((prev) => Math.max(0, prev - 1));
     } else if (key.downArrow) {
-      listRef.current?.selectNext();
+      setSelectedIndex((prev) => Math.min(items.length - 1, prev + 1));
     } else if (key.pageUp) {
       const viewH = metrics.viewport || 5;
       listRef.current?.scrollBy(-(viewH - 1));
@@ -206,10 +206,8 @@ const Demo = () => {
       const next = modes[(modes.indexOf(alignment) + 1) % modes.length];
       setAlignment(next);
       // Re-select current to apply new alignment immediately
-      if (listRef.current) {
-        const current = listRef.current.getSelectedIndex();
-        listRef.current.select(current, next);
-      }
+      // Note: In controlled mode, changing alignment prop automatically triggers re-scroll
+      // if selectedIndex is set.
     } else if (input === "w") {
       const widths: WidthSetting[] = ["100%", "70%", "auto"];
       setWidth(widths[(widths.indexOf(width) + 1) % widths.length]);
@@ -217,7 +215,7 @@ const Demo = () => {
 
     // Content Manipulation
     else if (input === " ") {
-      const idx = listRef.current?.getSelectedIndex() ?? -1;
+      const idx = selectedIndex;
       if (idx >= 0) {
         setExpandedItems((prev) => {
           const next = new Set(prev);
@@ -227,7 +225,6 @@ const Demo = () => {
         });
         // Re-measure only the affected item (more efficient than remeasure)
         listRef.current?.remeasureItem(idx);
-        listRef.current?.scrollToItem(idx);
       }
     } else if (input === "e") {
       const all = new Set(items.map((_, i) => i));
@@ -235,34 +232,23 @@ const Demo = () => {
         listRef.current?.remeasureItem(index);
       }
       setExpandedItems(all);
-      listRef.current?.scrollToItem(selectedIndex);
     } else if (input === "c") {
       for (let index = 0; index < items.length; index++) {
         listRef.current?.remeasureItem(index);
       }
       setExpandedItems(new Set());
-      listRef.current?.scrollToItem(selectedIndex);
+      listRef.current?.scrollToTop(); // Optional: reset scroll when collapsing all? Or keep selection.
+      // Actually keeping selection visible is handled by ScrollList.
     } else if (input === "+" || input === "=") {
       setItems((prev) => [...prev, generateItem(prev.length)]);
     } else if (input === "-" || input === "_") {
       setItems((prev) => prev.slice(0, -1));
       // Adjust selection if it was on the removed item
       if (selectedIndex >= items.length - 1) {
-        listRef.current?.select(Math.max(0, items.length - 2));
+        setSelectedIndex(Math.max(0, items.length - 2));
       }
     }
   });
-
-  const handleItemHeightChange = useCallback(
-    (index: number, height: number, previousHeight: number) => {
-      if (index === selectedIndex) {
-        listRef.current?.scrollToItem(selectedIndex);
-      } else if (index < selectedIndex) {
-        listRef.current?.scrollBy(height - previousHeight);
-      }
-    },
-    [selectedIndex],
-  );
 
   return (
     <Box flexDirection="column" height={process.stdout.rows - 1}>
@@ -277,10 +263,8 @@ const Demo = () => {
           ref={listRef}
           height="100%"
           width="100%"
-          onSelectionChange={setSelectedIndex}
           onScroll={updateMetrics}
           onContentHeightChange={updateMetrics}
-          onItemHeightChange={handleItemHeightChange}
           selectedIndex={selectedIndex}
           scrollAlignment={alignment}
         >
