@@ -10,7 +10,7 @@ A scrollable list with externally controlled selection.
 
 ## Remarks
 
-This component extends [ScrollView](https://github.com/ByteLandTechnology/ink-scroll-view) from ink-scroll-view to provide:
+This component extends ScrollView from ink-scroll-view to provide:
 
 - **Externally controlled selection**: Selection state is managed by the parent via `selectedIndex` prop
 - **Automatic scroll-into-view**: When `selectedIndex` changes, the component scrolls to ensure visibility

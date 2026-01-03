@@ -16,9 +16,11 @@ import {
   useEffect,
   forwardRef,
   useImperativeHandle,
+  useState,
   useCallback,
 } from "react";
-import { ScrollView, ScrollViewRef, ScrollViewProps } from "ink-scroll-view";
+import { ScrollViewProps, ScrollViewRef } from "ink-scroll-view";
+import { ControlledScrollView, ControlledScrollViewRef } from "ink-scroll-view";
 
 /**
  * Alignment mode for scrolling to items.
@@ -273,7 +275,29 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
      * Reference to the underlying ScrollView component.
      * Used to delegate scroll operations and query layout information.
      */
-    const scrollViewRef = useRef<ScrollViewRef>(null);
+    const scrollViewRef = useRef<ControlledScrollViewRef>(null);
+
+    /**
+     * Internal scroll offset state.
+     * Replaces uncontrolled ScrollView state to ensure atomic updates with selection.
+     */
+    const [scrollOffset, setScrollOffset] = useState(0);
+    const scrollOffsetRef = useRef(0);
+    // Sync ref with state asynchronously to avoid blocking render cycles
+    useEffect(() => {
+      scrollOffsetRef.current = scrollOffset;
+    }, [scrollOffset]);
+
+    // Helper to update scroll state and fire callback
+    const updateScroll = useCallback(
+      (newOffset: number) => {
+        if (newOffset !== scrollOffsetRef.current) {
+          setScrollOffset(newOffset);
+          onScroll?.(newOffset);
+        }
+      },
+      [onScroll],
+    );
 
     /**
      * Ref to store the current selectedIndex for use in callbacks.
@@ -416,68 +440,99 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
      * - `center`: offset = itemTop + itemHeight/2 - viewportHeight/2
      * - `auto`: minimal scroll - only adjusts if item is outside viewport
      */
+    const getConstrainedScrollOffset = useCallback(
+      (
+        index: number,
+        currentOffset: number,
+        mode: ScrollAlignment,
+        viewportHeightOverride?: number,
+      ): number => {
+        const position = scrollViewRef.current?.getItemPosition(index);
+        // If ref is not ready or measurement missing, return current
+        if (!position) return currentOffset;
+
+        const viewportHeight =
+          viewportHeightOverride ??
+          scrollViewRef.current?.getViewportHeight() ??
+          0;
+        const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
+
+        let target = currentOffset;
+
+        // Alignment logic
+        if (mode === "top") {
+          target = position.top;
+        } else if (mode === "bottom") {
+          target = position.top + position.height - viewportHeight;
+        } else if (mode === "center") {
+          target = position.top + position.height / 2 - viewportHeight / 2;
+        } else {
+          // Auto
+          const itemBottom = position.top + position.height;
+          // Check if item is already fully visible OR filling the viewport (for large items)
+          const isFillingViewport =
+            position.top <= currentOffset &&
+            itemBottom >= currentOffset + viewportHeight;
+
+          if (isFillingViewport) {
+            target = currentOffset;
+          } else if (position.top < currentOffset) {
+            target = position.top;
+          } else if (itemBottom > currentOffset + viewportHeight) {
+            target = itemBottom - viewportHeight;
+          }
+        }
+
+        // Clamp to global bounds
+        const maxScroll = Math.max(0, contentHeight - viewportHeight);
+        return Math.max(0, Math.min(target, maxScroll));
+      },
+      [],
+    );
+
+    // Calculate effective scroll offset during render (Derived State)
+    let renderScrollOffset = scrollOffset;
+    if (selectedIndex !== undefined && selectedIndex >= 0) {
+      renderScrollOffset = getConstrainedScrollOffset(
+        selectedIndex,
+        scrollOffset,
+        scrollAlignment,
+      );
+    }
+
+    /**
+     * Effect: Commit scroll offset changes.
+     *
+     * @remarks
+     * We use `useEffect` instead of `useLayoutEffect` to avoid "jitter" or flickering.
+     * Letting the render commit first and then updating the scroll state ensures smoother
+     * visual transitions and prevents potential conflicts during the synchronous layout phase.
+     */
+    useEffect(() => {
+      if (renderScrollOffset !== scrollOffset) {
+        updateScroll(renderScrollOffset);
+      }
+    }, [renderScrollOffset, scrollOffset, updateScroll]);
+
+    /**
+     * Legacy scrollToIndex wrapper for internal use if needed,
+     * though we prefer direct state updates now.
+     */
     const scrollToIndex = useCallback(
       (
         index: number,
         mode: ScrollAlignment = scrollAlignment,
         viewportHeightOverride?: number,
       ) => {
-        // Get item position from ScrollView - returns null if index is invalid
-        const position = scrollViewRef.current?.getItemPosition(index);
-        if (position === undefined || position === null) {
-          return; // Invalid index or component not mounted - silently fail
-        }
-
-        // Get current layout dimensions
-        const viewportHeight =
-          viewportHeightOverride ??
-          scrollViewRef.current?.getViewportHeight() ??
-          0;
-        const currentScrollOffset =
-          scrollViewRef.current?.getScrollOffset() ?? 0;
-        const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
-
-        // Calculate target scroll offset based on alignment mode
-        let targetScrollOffset = currentScrollOffset;
-
-        if (mode === "top") {
-          // Align item's top edge with viewport's top edge
-          targetScrollOffset = position.top;
-        } else if (mode === "bottom") {
-          // Align item's bottom edge with viewport's bottom edge
-          targetScrollOffset = position.top + position.height - viewportHeight;
-        } else if (mode === "center") {
-          // Align item's center with viewport's center
-          targetScrollOffset =
-            position.top + position.height / 2 - viewportHeight / 2;
-        } else {
-          // Auto mode - minimal scrolling to bring item into view
-          const itemBottom = position.top + position.height;
-
-          if (position.top < currentScrollOffset) {
-            // Item is above viewport - scroll up to show item's top
-            targetScrollOffset = position.top;
-          } else if (itemBottom > currentScrollOffset + viewportHeight) {
-            // Item is below viewport - scroll down to show item's bottom
-            targetScrollOffset = itemBottom - viewportHeight;
-          }
-          // If item is already visible, don't scroll (targetScrollOffset stays unchanged)
-        }
-
-        // Clamp scroll offset to valid bounds
-        // maxScroll is the maximum offset where viewport doesn't show empty space at bottom
-        const maxScroll = Math.max(0, contentHeight - viewportHeight);
-        const clampedScrollOffset = Math.max(
-          0,
-          Math.min(targetScrollOffset, maxScroll),
+        const newOffset = getConstrainedScrollOffset(
+          index,
+          scrollOffset,
+          mode,
+          viewportHeightOverride,
         );
-
-        // Only trigger scroll if position actually changed
-        if (clampedScrollOffset !== currentScrollOffset) {
-          scrollViewRef.current?.scrollTo(clampedScrollOffset);
-        }
+        updateScroll(newOffset);
       },
-      [scrollAlignment],
+      [getConstrainedScrollOffset, scrollOffset, scrollAlignment, updateScroll],
     );
 
     // =========================================================================
@@ -495,11 +550,6 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
      * - Only triggers for valid indices (>= 0)
      * - Undefined selectedIndex means "no auto-scroll" mode
      */
-    useEffect(() => {
-      if (selectedIndex !== undefined && selectedIndex >= 0) {
-        scrollToIndex(selectedIndex);
-      }
-    }, [selectedIndex, scrollToIndex]);
 
     // =========================================================================
     // Event Handlers
@@ -521,12 +571,20 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         previousSize: { width: number; height: number },
       ) => {
         // Re-scroll to keep selected item visible with new viewport size
+        // We calculate this "optimistically" even if we are not sure if layout settled,
+        // but ScrollView remeasures before calling this.
         if (
           selectedIndexRef.current !== undefined &&
           selectedIndexRef.current >= 0
         ) {
           // Pass the new height to avoid stale value during resize
-          scrollToIndex(selectedIndexRef.current, undefined, size.height);
+          const newOffset = getConstrainedScrollOffset(
+            selectedIndexRef.current,
+            scrollOffset,
+            scrollAlignment,
+            size.height,
+          );
+          updateScroll(newOffset);
         }
         // Forward callback to parent
         onViewportSizeChange?.(size, previousSize);
@@ -560,17 +618,34 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
           if (index < currentSelectedIndex) {
             // Item above selected changed - compensate scroll offset
             // This keeps the selected item at the same visual position
-            scrollViewRef.current?.scrollBy(height - previousHeight);
+            // But we must clamp it to be safe
+            const newOffset = clampToSelectionBounds(
+              scrollOffset + (height - previousHeight),
+            );
+            updateScroll(newOffset);
           } else if (index === currentSelectedIndex) {
             // Selected item itself changed - ensure it's still visible
-            scrollToIndex(index);
+            const newOffset = getConstrainedScrollOffset(
+              index,
+              scrollOffset,
+              scrollAlignment,
+            );
+            updateScroll(newOffset);
           }
           // Items below selected don't affect its position
         }
         // Forward callback to parent
         onItemHeightChange?.(index, height, previousHeight);
       },
-      [onItemHeightChange, scrollToIndex],
+      [
+        onItemHeightChange,
+        onItemHeightChange,
+        getConstrainedScrollOffset,
+        scrollAlignment,
+        scrollOffset,
+        clampToSelectionBounds,
+        updateScroll,
+      ],
     );
 
     /**
@@ -590,7 +665,13 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
           selectedIndexRef.current !== undefined &&
           selectedIndexRef.current >= 0
         ) {
-          scrollToIndex(selectedIndexRef.current);
+          scrollToIndex(selectedIndexRef.current); // Use the imperative logic? No, updateScroll.
+          const newOffset = getConstrainedScrollOffset(
+            selectedIndexRef.current,
+            scrollOffset,
+            scrollAlignment,
+          );
+          updateScroll(newOffset);
         }
         // Forward callback to parent
         onContentHeightChange?.(height, previousHeight);
@@ -616,111 +697,117 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
      * - Item queries: getItemHeight, getItemPosition
      * - Measurement: remeasure, remeasureItem
      */
-    useImperativeHandle(ref, () => ({
-      /**
-       * Scrolls to a specific Y offset.
-       *
-       * @param y - Target scroll offset
-       * @remarks
-       * - Clamps to valid bounds [0, maxScroll]
-       * - If a selected item exists, additionally constrains scroll to keep it visible
-       */
-      scrollTo: (y: number) => {
-        const clampedY = clampToSelectionBounds(y);
-        scrollViewRef.current?.scrollTo(clampedY);
-      },
+    useImperativeHandle(
+      ref,
+      () => ({
+        /**
+         * Scrolls to a specific Y offset.
+         *
+         * @param y - Target scroll offset
+         * @remarks
+         * - Clamps to valid bounds [0, maxScroll]
+         * - If a selected item exists, additionally constrains scroll to keep it visible
+         */
+        scrollTo: (y: number) => {
+          const clampedY = clampToSelectionBounds(y);
+          updateScroll(clampedY);
+        },
 
-      /**
-       * Scrolls by a relative amount.
-       *
-       * @param delta - Amount to scroll (positive = down, negative = up)
-       * @remarks
-       * - Clamps result to valid bounds
-       * - If a selected item exists, additionally constrains scroll to keep it visible
-       */
-      scrollBy: (delta: number) => {
-        const currentOffset = scrollViewRef.current?.getScrollOffset() ?? 0;
-        const clampedY = clampToSelectionBounds(currentOffset + delta);
-        scrollViewRef.current?.scrollTo(clampedY);
-      },
+        /**
+         * Scrolls by a relative amount.
+         *
+         * @param delta - Amount to scroll (positive = down, negative = up)
+         * @remarks
+         * - Clamps result to valid bounds
+         * - If a selected item exists, additionally constrains scroll to keep it visible
+         */
+        scrollBy: (delta: number) => {
+          const currentOffset = scrollOffsetRef.current;
+          const clampedY = clampToSelectionBounds(currentOffset + delta);
+          updateScroll(clampedY);
+        },
 
-      /**
-       * Scrolls to the top (offset 0), or as close as possible while keeping selected item visible.
-       *
-       * @remarks If a selected item exists, scrolls to the minimum offset that keeps it visible.
-       */
-      scrollToTop: () => {
-        const clampedY = clampToSelectionBounds(0);
-        scrollViewRef.current?.scrollTo(clampedY);
-      },
+        /**
+         * Scrolls to the top (offset 0), or as close as possible while keeping selected item visible.
+         *
+         * @remarks If a selected item exists, scrolls to the minimum offset that keeps it visible.
+         */
+        scrollToTop: () => {
+          const clampedY = clampToSelectionBounds(0);
+          updateScroll(clampedY);
+        },
 
-      /**
-       * Scrolls to the bottom, or as close as possible while keeping selected item visible.
-       *
-       * @remarks If a selected item exists, scrolls to the maximum offset that keeps it visible.
-       */
-      scrollToBottom: () => {
-        const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
-        const viewportHeight = scrollViewRef.current?.getViewportHeight() ?? 0;
-        const maxScroll = Math.max(0, contentHeight - viewportHeight);
-        const clampedY = clampToSelectionBounds(maxScroll);
-        scrollViewRef.current?.scrollTo(clampedY);
-      },
+        /**
+         * Scrolls to the bottom, or as close as possible while keeping selected item visible.
+         *
+         * @remarks If a selected item exists, scrolls to the maximum offset that keeps it visible.
+         */
+        scrollToBottom: () => {
+          const contentHeight = scrollViewRef.current?.getContentHeight() ?? 0;
+          const viewportHeight =
+            scrollViewRef.current?.getViewportHeight() ?? 0;
+          const maxScroll = Math.max(0, contentHeight - viewportHeight);
+          const clampedY = clampToSelectionBounds(maxScroll);
+          updateScroll(clampedY);
+        },
 
-      /** @returns Current scroll offset in lines */
-      getScrollOffset: () => scrollViewRef.current?.getScrollOffset() ?? 0,
+        /** @returns Current scroll offset in lines */
+        getScrollOffset: () => scrollOffsetRef.current,
 
-      /** @returns Total content height in lines */
-      getContentHeight: () => scrollViewRef.current?.getContentHeight() ?? 0,
+        /** @returns Total content height in lines */
+        getContentHeight: () => scrollViewRef.current?.getContentHeight() ?? 0,
 
-      /** @returns Viewport height in lines */
-      getViewportHeight: () => scrollViewRef.current?.getViewportHeight() ?? 0,
+        /** @returns Viewport height in lines */
+        getViewportHeight: () =>
+          scrollViewRef.current?.getViewportHeight() ?? 0,
 
-      /** @returns Distance from current scroll position to bottom of content */
-      getBottomOffset: () => scrollViewRef.current?.getBottomOffset() ?? 0,
+        /** @returns Distance from current scroll position to bottom of content */
+        getBottomOffset: () => scrollViewRef.current?.getBottomOffset() ?? 0,
 
-      /**
-       * Gets the height of a specific item.
-       * @param index - Item index
-       * @returns Item height in lines, or 0 if not found
-       */
-      getItemHeight: (index: number) =>
-        scrollViewRef.current?.getItemHeight(index) ?? 0,
+        /**
+         * Gets the height of a specific item.
+         * @param index - Item index
+         * @returns Item height in lines, or 0 if not found
+         */
+        getItemHeight: (index: number) =>
+          scrollViewRef.current?.getItemHeight(index) ?? 0,
 
-      /**
-       * Gets the position of a specific item.
-       * @param index - Item index
-       * @returns Object with top and height properties, or null if not found
-       */
-      getItemPosition: (index: number) =>
-        scrollViewRef.current?.getItemPosition(index) ?? null,
+        /**
+         * Gets the position of a specific item.
+         * @param index - Item index
+         * @returns Object with top and height properties, or null if not found
+         */
+        getItemPosition: (index: number) =>
+          scrollViewRef.current?.getItemPosition(index) ?? null,
 
-      /** Forces remeasurement of all items. Call this on terminal resize. */
-      remeasure: () => scrollViewRef.current?.remeasure(),
+        /** Forces remeasurement of all items. Call this on terminal resize. */
+        remeasure: () => scrollViewRef.current?.remeasure(),
 
-      /**
-       * Forces remeasurement of a specific item.
-       * @param index - Item index to remeasure
-       */
-      remeasureItem: (index: number) =>
-        scrollViewRef.current?.remeasureItem(index),
-    }));
+        /**
+         * Forces remeasurement of a specific item.
+         * @param index - Item index to remeasure
+         */
+        remeasureItem: (index: number) =>
+          scrollViewRef.current?.remeasureItem(index),
+      }),
+      [],
+    );
 
     // =========================================================================
     // Render
     // =========================================================================
 
     return (
-      <ScrollView
+      <ControlledScrollView
         ref={scrollViewRef}
-        onScroll={onScroll}
+        scrollOffset={renderScrollOffset}
         onViewportSizeChange={handleViewportSizeChange}
         onContentHeightChange={handleContentHeightChange}
         onItemHeightChange={handleItemHeightChange}
         {...boxProps}
       >
         {children}
-      </ScrollView>
+      </ControlledScrollView>
     );
   },
 );
