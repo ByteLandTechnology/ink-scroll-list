@@ -10,7 +10,7 @@ A scrollable list with externally controlled selection.
 
 ## Remarks
 
-This component extends ScrollView from ink-scroll-view to provide:
+This component builds on ink-scroll-view to provide:
 
 - **Externally controlled selection**: Selection state is managed by the parent via `selectedIndex` prop
 - **Automatic scroll-into-view**: When `selectedIndex` changes, the component scrolls to ensure visibility
@@ -40,8 +40,11 @@ The component automatically scrolls to keep the selected item visible in these s
 
 - **No input handling**: This component does NOT handle keyboard input.
   Use `useInput` from Ink to update `selectedIndex` in the parent.
-- **No resize detection**: Does NOT automatically respond to terminal resize.
-  Listen to `process.stdout`'s `resize` event and call `remeasure()` on the ref.
+- **Automatic measurement**: Viewport changes are measured automatically, including
+  parent layout changes and terminal resizes. Keep your existing layout; no new
+  height prop or resize-triggered `remeasure()` call is required. If a resize
+  listener also updates app-specific dimensions or performs other work,
+  remove only its `remeasure()` call and keep that other behavior.
 - **Parent manages bounds**: The component does NOT clamp `selectedIndex`.
   The parent should ensure the value is within valid range [0, itemCount - 1].
 

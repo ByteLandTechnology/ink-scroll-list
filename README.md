@@ -38,8 +38,10 @@ A high-level ScrollList component for [Ink](https://github.com/vadimdemedes/ink)
 ```bash
 npm install ink-scroll-list
 # Peer dependencies
-npm install ink react
+npm install ink@^7 react@">=19.2.0"
 ```
+
+Requires Node.js 22 or newer, Ink 7, and React 19.2 or newer; uses `ink-scroll-view` 0.4.x.
 
 ## 🚀 Usage
 
@@ -132,10 +134,12 @@ Extends `ScrollViewRef` from `ink-scroll-view`. Access these via `ref.current`.
 | `getBottomOffset`   | `() => number`                             | Get distance from bottom.                                            |
 | `getItemHeight`     | `(index: number) => number`                | Get a specific item's height.                                        |
 | `getItemPosition`   | `(index: number) => {top, height} \| null` | Get a specific item's position.                                      |
-| `remeasure`         | `() => void`                               | Force remeasurement of all items.                                    |
-| `remeasureItem`     | `(index: number) => void`                  | Force remeasurement of a specific item.                              |
+| `remeasure`         | `() => void`                               | Re-check viewport dimensions. See note below.                        |
+| `remeasureItem`     | `(index: number) => void`                  | Force remeasurement of a single item. See note below.                |
 
 **Large Items**: For items that are larger than the viewport, scrolling is allowed within the item's bounds. This lets users scroll to see different parts of the large item while at least part of it remains visible.
+
+**Manual measurement**: `remeasure()` re-checks viewport dimensions; it does not force all items to be measured. Viewport layout changes are tracked automatically. Item measurement runs when the measuring wrapper's inputs change, such as new child elements or a new viewport width. If an item changes height through its own internal state while those inputs stay unchanged, call `remeasureItem(index)` after the update has committed.
 
 ## 💡 Tips
 
@@ -143,21 +147,35 @@ Extends `ScrollViewRef` from `ink-scroll-view`. Access these via `ref.current`.
 
 2. **Input Handling**: Use `useInput` from Ink to handle keyboard events and update `selectedIndex` accordingly. The component does NOT handle input internally.
 
-3. **Terminal Resizing**: Ink components don't automatically know when the terminal window resizes. Listen to `process.stdout`'s `resize` event and call `remeasure()` on the ref:
+3. **Layout Changes**: With Ink 7 and `ink-scroll-view` 0.4.x, viewport dimensions are measured automatically when the surrounding layout changes, including terminal resizes. Remove resize listeners whose only job is to call `remeasure()`.
 
-   ```tsx
-   useEffect(() => {
-     const handleResize = () => listRef.current?.remeasure();
-     process.stdout.on("resize", handleResize);
-     return () => process.stdout.off("resize", handleResize);
-   }, []);
-   ```
+   **Keep your existing layout.** The upgrade does not require a new `height` prop or a terminal-sized container. A fixed-height parent such as `<Box height={10}>` still works. Percentage and flex dimensions (`height="100%"`, `flexGrow={1}`) still use the space provided by their parent. Automatic measurement observes that space; it does not choose the container's height.
 
 4. **Dynamic Items**: When items are added or removed, the parent should update `selectedIndex` if necessary:
    - When adding items at the beginning: `setSelectedIndex(prev => prev + addedCount)`
    - When removing items: Clamp to valid range: `setSelectedIndex(prev => Math.min(prev, newLength - 1))`
 
 5. **Performance**: `ScrollList` uses `ink-scroll-view` under the hood, so it benefits from the same performance optimizations (item height caching, efficient re-layouts).
+
+## ⚠️ Breaking Changes: Ink 7
+
+This release requires **Ink 7**, **React 19.2+**, and **Node.js 22+** (required by Ink 7). The peer range narrowed from `ink >=6` to `ink ^7`, so projects still on Ink 6 must upgrade Ink before upgrading this package.
+
+**What changed:** Previously, the documentation instructed you to listen for terminal resizes and call `remeasure()`. With Ink 7 and `ink-scroll-view` 0.4.x, viewport measurement follows layout changes automatically, including changes driven by a parent container or terminal resize.
+
+**Migration:** Keep your existing height, percentage, or flex layout. Delete the listener below if its only purpose is to trigger remeasurement:
+
+```diff
+- useEffect(() => {
+-   const handleResize = () => listRef.current?.remeasure();
+-   process.stdout.on("resize", handleResize);
+-   return () => process.stdout.off("resize", handleResize);
+- }, []);
+```
+
+No new height prop or layout change is required. If a resize listener also updates app-specific dimensions or performs other work, remove only its `remeasure()` call and keep that other behavior.
+
+The component's props and ref methods remain available; manual remeasurement is no longer required to track viewport layout changes.
 
 ## ⚠️ Breaking Changes in v0.4.0
 

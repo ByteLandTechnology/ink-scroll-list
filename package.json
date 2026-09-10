@@ -35,11 +35,11 @@
     "docs": "typedoc && prettier --write docs/api"
   },
   "dependencies": {
-    "ink-scroll-view": "^0.3.5"
+    "ink-scroll-view": "^0.4.0"
   },
   "peerDependencies": {
-    "ink": ">=6",
-    "react": ">=19"
+    "ink": "^7",
+    "react": ">=19.2.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.2.0",
@@ -49,7 +49,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "husky": "^9.1.7",
-    "ink": "^6.5.1",
+    "ink": "^7.0.1",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "react": "^19.2.1",

@@ -137,19 +137,40 @@ export interface ScrollListProps extends ScrollViewProps {
  * - `getBottomOffset()`: Get the offset from the bottom
  * - `getItemHeight(index)`: Get a specific item's height
  * - `getItemPosition(index)`: Get a specific item's position (top and height)
- * - `remeasure()`: Force remeasurement of all items
+ * - `remeasure()`: Re-check viewport dimensions
  * - `remeasureItem(index)`: Force remeasurement of a specific item
  *
  * **Note**: Unlike previous versions, there are no selection methods (select, selectNext, etc.)
  * as selection is now controlled externally via the `selectedIndex` prop.
  */
-export interface ScrollListRef extends ScrollViewRef {}
+export interface ScrollListRef extends ScrollViewRef {
+  /**
+   * Re-checks the viewport dimensions and updates them if they have changed.
+   *
+   * @remarks
+   * Viewport layout changes are tracked automatically, including parent layout
+   * changes and terminal resizes. This method does not force item measurement.
+   * Use {@link ScrollListRef.remeasureItem} to re-measure a specific item.
+   */
+  remeasure: () => void;
+
+  /**
+   * Triggers remeasurement of a specific item.
+   *
+   * @param index - Index of the item to re-measure.
+   * @remarks
+   * Use this after an item's internal state update has committed if its height
+   * changed without changing the measuring wrapper's inputs, such as its child
+   * element or viewport width.
+   */
+  remeasureItem: (index: number) => void;
+}
 
 /**
  * A scrollable list with externally controlled selection.
  *
  * @remarks
- * This component extends {@link ScrollView} from ink-scroll-view to provide:
+ * This component builds on ink-scroll-view to provide:
  * - **Externally controlled selection**: Selection state is managed by the parent via `selectedIndex` prop
  * - **Automatic scroll-into-view**: When `selectedIndex` changes, the component scrolls to ensure visibility
  * - **Configurable alignment**: Control how selected items are positioned within the viewport
@@ -176,8 +197,11 @@ export interface ScrollListRef extends ScrollViewRef {}
  *
  * - **No input handling**: This component does NOT handle keyboard input.
  *   Use `useInput` from Ink to update `selectedIndex` in the parent.
- * - **No resize detection**: Does NOT automatically respond to terminal resize.
- *   Listen to `process.stdout`'s `resize` event and call `remeasure()` on the ref.
+ * - **Automatic measurement**: Viewport changes are measured automatically, including
+ *   parent layout changes and terminal resizes. Keep your existing layout; no new
+ *   height prop or resize-triggered `remeasure()` call is required. If a resize
+ *   listener also updates app-specific dimensions or performs other work,
+ *   remove only its `remeasure()` call and keep that other behavior.
  * - **Parent manages bounds**: The component does NOT clamp `selectedIndex`.
  *   The parent should ensure the value is within valid range [0, itemCount - 1].
  *
@@ -780,7 +804,7 @@ export const ScrollList = forwardRef<ScrollListRef, ScrollListProps>(
         getItemPosition: (index: number) =>
           scrollViewRef.current?.getItemPosition(index) ?? null,
 
-        /** Forces remeasurement of all items. Call this on terminal resize. */
+        /** Re-checks viewport dimensions; does not force item measurement. */
         remeasure: () => scrollViewRef.current?.remeasure(),
 
         /**

@@ -32,7 +32,7 @@ of it visible.
 - `getBottomOffset()`: Get the offset from the bottom
 - `getItemHeight(index)`: Get a specific item's height
 - `getItemPosition(index)`: Get a specific item's position (top and height)
-- `remeasure()`: Force remeasurement of all items
+- `remeasure()`: Re-check viewport dimensions
 - `remeasureItem(index)`: Force remeasurement of a specific item
 
 **Note**: Unlike previous versions, there are no selection methods (select, selectNext, etc.)
@@ -188,7 +188,7 @@ The viewport height in terminal rows.
 
 > **remeasure**: () => `void`
 
-Re-measures the ScrollView viewport dimensions.
+Re-checks the viewport dimensions and updates them if they have changed.
 
 #### Returns
 
@@ -196,21 +196,11 @@ Re-measures the ScrollView viewport dimensions.
 
 #### Remarks
 
-Checks the current dimensions of the viewport and updates state if they have changed.
-This is crucial for handling terminal resizes, as Ink does not automatically propagate resize events to components.
+Viewport layout changes are tracked automatically, including parent layout
+changes and terminal resizes. This method does not force item measurement.
+Use [ScrollListRef.remeasureItem](#remeasureitem) to re-measure a specific item.
 
-#### Example
-
-```tsx
-// Handle terminal resize manually
-useEffect(() => {
-  const onResize = () => ref.current?.remeasure();
-  process.stdout.on("resize", onResize);
-  return () => process.stdout.off("resize", onResize);
-}, []);
-```
-
-#### Inherited from
+#### Overrides
 
 `ScrollViewRef.remeasure`
 
@@ -220,7 +210,7 @@ useEffect(() => {
 
 > **remeasureItem**: (`index`) => `void`
 
-Triggers re-measurement of a specific child item.
+Triggers remeasurement of a specific item.
 
 #### Parameters
 
@@ -228,7 +218,7 @@ Triggers re-measurement of a specific child item.
 
 `number`
 
-The index of the child to re-measure.
+Index of the item to re-measure.
 
 #### Returns
 
@@ -236,10 +226,11 @@ The index of the child to re-measure.
 
 #### Remarks
 
-Use this if a child's internal content changes size in a way that doesn't trigger a standard React render cycle update
-(e.g., internal state change within the child that affects its height).
+Use this after an item's internal state update has committed if its height
+changed without changing the measuring wrapper's inputs, such as its child
+element or viewport width.
 
-#### Inherited from
+#### Overrides
 
 `ScrollViewRef.remeasureItem`
 

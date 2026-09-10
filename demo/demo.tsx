@@ -154,6 +154,9 @@ const Demo = () => {
   // Metrics for Status Bar
   const [metrics, setMetrics] = useState({ offset: 0, max: 0, viewport: 0 });
 
+  // Terminal height, kept current by the resize listener below
+  const [rows, setRows] = useState(() => stdout?.rows ?? process.stdout.rows);
+
   // Helpers
   const updateMetrics = useCallback(() => {
     if (listRef.current) {
@@ -165,10 +168,11 @@ const Demo = () => {
     }
   }, []);
 
-  // Listen for resize
+  // Viewport measurement is automatic; this only keeps the app-computed
+  // height prop below in sync with the terminal size.
   useEffect(() => {
     const handleResize = () => {
-      listRef.current?.remeasure();
+      setRows(stdout?.rows ?? process.stdout.rows);
     };
     stdout?.on("resize", handleResize);
     return () => {
@@ -251,7 +255,7 @@ const Demo = () => {
   });
 
   return (
-    <Box flexDirection="column" height={process.stdout.rows - 1}>
+    <Box flexDirection="column" height={rows - 1}>
       <ControlPanel
         alignment={alignment}
         width={width}
