@@ -14,6 +14,7 @@ import { Layout, Navbar, ThemeSwitch } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import { Exo_2 } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "nextra-theme-docs/style.css";
 import "./globals.css";
 import type { Metadata } from "next";
@@ -119,6 +120,7 @@ export default async function RootLayout({
         >
           {children}
         </Layout>
+        <SpeedInsights />
       </body>
     </html>
   );

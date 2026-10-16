@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@byteland/ink-scroll-bar": "^0.1.1",
+    "@vercel/speed-insights": "^1.2.1",
     "buffer": "^6.0.3",
     "events": "^3.3.0",
     "ink": "^7.0.1",
